@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Navigation } from "@/components/Navigation";
 import { GradeTopicSelector, curriculumTopics } from "@/components/GradeTopicSelector";
+import { StepQuestionDialog } from "@/components/StepQuestionDialog";
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
@@ -160,10 +161,17 @@ const StepByStep = () => {
             </div>
 
             <Card className="p-6 bg-accent/5 border-accent mb-6">
-              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <ChevronRight className="h-5 w-5 text-primary" />
-                {currentLesson.steps[currentStep].title}
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold flex items-center gap-2">
+                  <ChevronRight className="h-5 w-5 text-primary" />
+                  {currentLesson.steps[currentStep].title}
+                </h3>
+                <StepQuestionDialog
+                  stepContent={currentLesson.steps[currentStep].title}
+                  stepExplanation={currentLesson.steps[currentStep].explanation}
+                  topic={selectedTopic}
+                />
+              </div>
 
               <div className="prose prose-sm max-w-none dark:prose-invert mb-4">
                 <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>

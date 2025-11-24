@@ -1,11 +1,12 @@
 import { NavLink } from "@/components/NavLink";
-import { BookOpen, Target, AlertCircle, Calendar } from "lucide-react";
+import { BookOpen, Target, AlertCircle, Calendar, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Navigation = () => {
   const navItems = [
     { to: "/", icon: BookOpen, label: "Learn" },
     { to: "/practice", icon: Target, label: "Practice" },
+    { to: "/video-library", icon: Video, label: "Videos" },
     { to: "/mistakes", icon: AlertCircle, label: "Mistakes" },
     { to: "/learning-plan", icon: Calendar, label: "Plan" },
   ];
