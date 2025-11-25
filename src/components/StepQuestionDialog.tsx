@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -8,7 +8,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageCircle, Loader2, Send } from "lucide-react";
+import { MessageCircle, Loader2, Send, Image } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
@@ -18,6 +18,7 @@ import "katex/dist/katex.min.css";
 interface Message {
   role: "user" | "assistant";
   content: string;
+  image?: string;
 }
 
 interface StepQuestionDialogProps {
@@ -39,7 +40,78 @@ export const StepQuestionDialog = ({
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [canGenerateVisual, setCanGenerateVisual] = useState(false);
   const { toast } = useToast();
+
+  // Check if the last message context supports visual generation
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === "assistant") {
+        // Check if the response mentions geometric concepts, graphs, or visual concepts
+        const visualKeywords = ["graph", "diagram", "shape", "triangle", "circle", "square", "plot", "curve", "line", "angle", "geometry", "coordinate", "axis", "visual"];
+        const hasVisualContext = visualKeywords.some(keyword => 
+          lastMessage.content.toLowerCase().includes(keyword)
+        );
+        setCanGenerateVisual(hasVisualContext);
+      }
+    }
+  }, [messages]);
+
+  const generateVisualExample = async () => {
+    if (messages.length === 0) return;
+    
+    const lastAssistantMessage = [...messages].reverse().find(m => m.role === "assistant");
+    if (!lastAssistantMessage) return;
+
+    setIsGeneratingImage(true);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-visual-example`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            context: lastAssistantMessage.content,
+            topic,
+            gradeLevel,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to generate visual example");
+      }
+
+      const data = await response.json();
+      const imageUrl = data.image;
+
+      if (imageUrl) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: "Here's a visual representation to help you understand:",
+            image: imageUrl,
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error("Error generating visual:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate visual example. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
 
   const askQuestion = async () => {
     if (!question.trim()) {
@@ -196,6 +268,13 @@ export const StepQuestionDialog = ({
                     {message.content}
                   </ReactMarkdown>
                 </div>
+                {message.image && (
+                  <img 
+                    src={message.image} 
+                    alt="Visual example" 
+                    className="mt-3 rounded-lg max-w-full h-auto border border-border"
+                  />
+                )}
               </div>
             ))}
 
@@ -207,7 +286,26 @@ export const StepQuestionDialog = ({
             )}
           </div>
 
-          <div className="p-6 border-t border-border">
+          <div className="p-6 border-t border-border space-y-3">
+            {canGenerateVisual && !isGeneratingImage && (
+              <Button
+                onClick={generateVisualExample}
+                variant="outline"
+                className="w-full"
+                disabled={isLoading}
+              >
+                <Image className="w-4 h-4 mr-2" />
+                Generate Visual Example
+              </Button>
+            )}
+            
+            {isGeneratingImage && (
+              <div className="flex items-center justify-center gap-2 text-muted-foreground p-3 bg-secondary/20 rounded-lg">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="text-sm">Creating visual example...</span>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <Textarea
                 value={question}
