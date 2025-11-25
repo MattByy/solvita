@@ -179,13 +179,13 @@ export const TheoryQuiz = ({ questions, onComplete, onReadTheory, onRetry }: The
         
         <RadioGroup
           key={currentQuestion}
-          value={selectedAnswer !== null ? selectedAnswer.toString() : ""}
+          value={selectedAnswer !== null ? selectedAnswer.toString() : undefined}
           onValueChange={(value) => setSelectedAnswer(parseInt(value))}
         >
           {currentQ.options.map((option, index) => (
-            <div key={index} className="flex items-center space-x-2">
-              <RadioGroupItem value={index.toString()} id={`option-${index}`} />
-              <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
+            <div key={`q${currentQuestion}-opt${index}`} className="flex items-center space-x-2">
+              <RadioGroupItem value={index.toString()} id={`q${currentQuestion}-option-${index}`} />
+              <Label htmlFor={`q${currentQuestion}-option-${index}`} className="flex-1 cursor-pointer">
                 <div className="prose prose-sm dark:prose-invert">
                   <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
                     {option}
