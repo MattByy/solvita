@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
 import StepByStep from "./pages/StepByStep";
 import Practice from "./pages/Practice";
 import VideoLibrary from "./pages/VideoLibrary";
@@ -19,7 +20,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<StepByStep />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/learn" element={<StepByStep />} />
           <Route path="/practice" element={<Practice />} />
           <Route path="/video-library" element={<VideoLibrary />} />
           <Route path="/mistakes" element={<Mistakes />} />
