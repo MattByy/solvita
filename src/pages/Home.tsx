@@ -57,15 +57,6 @@ const Home = () => {
   // Days until exam
   const daysUntilExam = differenceInDays(parseISO(plan.test_date), today);
 
-  const getTaskTypeIcon = (type: string) => {
-    switch (type) {
-      case 'theory': return '📚';
-      case 'quiz': return '✍️';
-      case 'practice': return '🎯'; // Changed to target to represent focused daily work
-      case 'review': return '🔄';
-      default: return '📝';
-    }
-  };
 
   const navigateToTask = (taskType: string) => {
     // Since all daily tasks now encompass theory + practice + quiz, 
@@ -93,161 +84,143 @@ const Home = () => {
           <Navigation />
 
           {/* Header */}
-          <div className="text-center space-y-4 py-8">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground">
-              Your Learning Journey
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-foreground">
+              Learning Plan
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {plan.grade} - {plan.topic_name}
+            <p className="text-muted-foreground">
+              {plan.grade} • {plan.topic_name}
             </p>
           </div>
 
-          {/* Exam Countdown */}
-          <Card className="border-2 border-primary/50 bg-gradient-to-br from-primary/10 to-secondary/20">
-            <CardContent className="py-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-primary/20 rounded-full">
-                    <Target className="h-8 w-8 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-foreground">
-                      {daysUntilExam === 0 ? 'Exam is Today!' : `${daysUntilExam} Days Until Exam`}
-                    </h3>
-                    <p className="text-muted-foreground">
-                      {format(parseISO(plan.test_date), 'EEEE, MMMM d, yyyy')}
-                    </p>
-                  </div>
+          {/* Exam Countdown & Progress */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <Card className="border-primary/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Target className="h-5 w-5 text-primary" />
+                  Test Date
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold text-foreground">
+                    {daysUntilExam === 0 ? 'Today' : `${daysUntilExam} days`}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {format(parseISO(plan.test_date), 'MMM d, yyyy')}
+                  </p>
                 </div>
-                {daysUntilExam > 0 && (
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Keep going!</p>
-                    <p className="text-lg font-semibold">{completedTasks.length}/{tasks.length} tasks completed</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Progress Overview */}
-          <Card className="border-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                Your Progress
-              </CardTitle>
-              <CardDescription>
-                You've completed {completedTasks.length} out of {tasks.length} tasks
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Progress value={progressPercentage} className="h-3" />
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>{completedTasks.length} completed</span>
-                <span>{tasks.length - completedTasks.length} remaining</span>
-              </div>
-            </CardContent>
-          </Card>
+            <Card className="border-primary/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                  Progress
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Progress value={progressPercentage} className="h-2" />
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">{completedTasks.length} completed</span>
+                  <span className="font-medium">{Math.round(progressPercentage)}%</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
 
           {/* Today's Tasks */}
           {todayTasks.length > 0 && (
-            <Card className="border-2 border-blue-500/50 bg-blue-500/5">
+            <Card className="border-primary">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                  <Calendar className="h-5 w-5" />
-                  Today's Learning
-                </CardTitle>
-                <CardDescription>
-                  {todayTasks.length === 1 
-                    ? "Focus on this topic today" 
-                    : `${todayTasks.length} topics to focus on today`
-                  }
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between p-4 rounded-lg bg-background/80 border-2 border-blue-500/30">
-                  <div className="flex items-center gap-3 flex-1">
-                    <span className="text-2xl">🎯</span>
-                    <div className="flex-1">
-                      {todayTasks.length === 1 ? (
-                        <>
-                          <p className="font-semibold text-foreground">{todayTasks[0].title}</p>
-                          <p className="text-sm text-muted-foreground">{todayTasks[0].description}</p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="font-semibold text-foreground">Today's Topics</p>
-                          <div className="text-sm text-muted-foreground">
-                            {todayTasks.map((task, index) => (
-                              <div key={task.id} className="mb-1">
-                                <span className="font-medium">• {task.title}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </>
-                      )}
-                    </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl">Today</CardTitle>
+                    <CardDescription className="mt-1">
+                      {todayTasks.length} {todayTasks.length === 1 ? 'task' : 'tasks'} scheduled
+                    </CardDescription>
                   </div>
                   <Button onClick={() => navigateToTask('practice')} size="lg">
-                    Start Learning
+                    Start
                   </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {todayTasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5">
+                          <Circle className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground">{task.title}</p>
+                          <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
+                        </div>
+                        <Badge variant="outline" className="shrink-0">
+                          {task.task_type}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Timeline: Past Tasks */}
+          {/* Past Tasks */}
           {pastTasks.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  {completedTasks.length === pastTasks.length ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <Circle className="h-5 w-5 text-muted-foreground" />
-                  )}
-                  Past Tasks
-                </CardTitle>
+                <CardTitle className="text-xl">Past</CardTitle>
                 <CardDescription>
                   {completedTasks.length} of {pastTasks.length} completed
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {pastTasks.map((task) => (
                     <div
                       key={task.id}
-                      className={`flex items-center justify-between p-4 rounded-lg transition-colors ${
-                        task.is_completed
-                          ? 'bg-green-500/10 border border-green-500/30'
-                          : 'bg-red-500/10 border border-red-500/30'
-                      }`}
+                      className="p-4 rounded-lg border bg-card"
                     >
-                      <div className="flex items-center gap-3">
-                        {task.is_completed ? (
-                          <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
-                        ) : (
-                          <Circle className="h-5 w-5 text-red-500 flex-shrink-0" />
-                        )}
-                        <span className="text-xl">{getTaskTypeIcon(task.task_type)}</span>
-                        <div>
-                          <p className={`font-medium ${task.is_completed ? 'text-foreground' : 'text-muted-foreground'}`}>
-                            {task.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {format(parseISO(task.scheduled_date), 'MMM d, yyyy')}
-                          </p>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          {task.is_completed ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
+                          ) : (
+                            <Circle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className={`font-medium ${task.is_completed ? 'text-foreground' : 'text-muted-foreground'}`}>
+                              {task.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {format(parseISO(task.scheduled_date), 'MMM d')}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge variant="outline" className="text-xs">
+                            {task.task_type}
+                          </Badge>
+                          {task.is_completed ? (
+                            <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30 text-xs">
+                              Done
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-muted text-muted-foreground border-muted text-xs">
+                              Missed
+                            </Badge>
+                          )}
                         </div>
                       </div>
-                      {task.is_completed ? (
-                        <Badge variant="outline" className="bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/50">
-                          Completed
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/50">
-                          Missed
-                        </Badge>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -259,30 +232,31 @@ const Home = () => {
           {upcomingTasks.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-muted-foreground" />
-                  Upcoming Tasks
-                </CardTitle>
+                <CardTitle className="text-xl">Upcoming</CardTitle>
                 <CardDescription>
-                  What's coming next in your study plan
+                  {upcomingTasks.length} {upcomingTasks.length === 1 ? 'task' : 'tasks'} scheduled
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {upcomingTasks.map((task) => (
                     <div
                       key={task.id}
-                      className="flex items-center justify-between p-4 rounded-lg bg-secondary/30"
+                      className="p-4 rounded-lg border bg-card"
                     >
-                      <div className="flex items-center gap-3">
-                        <Circle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                        <span className="text-xl">{getTaskTypeIcon(task.task_type)}</span>
-                        <div>
-                          <p className="font-medium text-muted-foreground">{task.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {format(parseISO(task.scheduled_date), 'EEEE, MMM d')}
-                          </p>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          <Circle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-muted-foreground">{task.title}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {format(parseISO(task.scheduled_date), 'EEE, MMM d')}
+                            </p>
+                          </div>
                         </div>
+                        <Badge variant="outline" className="text-xs shrink-0">
+                          {task.task_type}
+                        </Badge>
                       </div>
                     </div>
                   ))}
