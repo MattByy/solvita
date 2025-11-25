@@ -1,4 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Slider } from "@/components/ui/slider";
+import { Card } from "@/components/ui/card";
 
 interface Point {
   x: number;
@@ -17,14 +19,42 @@ interface MathGraphProps {
   };
   width?: number;
   height?: number;
+  interactive?: boolean;
 }
 
-export const MathGraph = ({ type, parameters = {}, width = 600, height = 400 }: MathGraphProps) => {
-  const { a = 1, b = 0, c = 0, discriminant, roots = [] } = parameters;
+export const MathGraph = ({ 
+  type, 
+  parameters = {}, 
+  width = 500, 
+  height = 350,
+  interactive = false 
+}: MathGraphProps) => {
+  const [interactiveA, setInteractiveA] = useState(parameters.a || 1);
+  const [interactiveB, setInteractiveB] = useState(parameters.b || 0);
+  const [interactiveC, setInteractiveC] = useState(parameters.c || 0);
+
+  const a = interactive ? interactiveA : (parameters.a || 1);
+  const b = interactive ? interactiveB : (parameters.b || 0);
+  const c = interactive ? interactiveC : (parameters.c || 0);
   
   const padding = 40;
   const graphWidth = width - 2 * padding;
   const graphHeight = height - 2 * padding;
+  
+  // Calculate discriminant and roots dynamically for interactive mode
+  const discriminant = interactive ? b * b - 4 * a * c : parameters.discriminant;
+  const roots = useMemo(() => {
+    if (interactive && discriminant !== undefined) {
+      if (discriminant > 0) {
+        const sqrtDisc = Math.sqrt(discriminant);
+        return [(-b + sqrtDisc) / (2 * a), (-b - sqrtDisc) / (2 * a)];
+      } else if (discriminant === 0) {
+        return [-b / (2 * a)];
+      }
+      return [];
+    }
+    return parameters.roots || [];
+  }, [interactive, discriminant, a, b, parameters.roots]);
   
   // Calculate scale and range
   const xRange = 10;
@@ -62,8 +92,10 @@ export const MathGraph = ({ type, parameters = {}, width = 600, height = 400 }: 
   };
 
   return (
-    <div className="bg-background border border-border rounded-lg p-4">
-      <svg width={width} height={height} className="mx-auto">
+    <div className="space-y-4">
+      <Card className="p-4 bg-background border border-border">
+        <div className="w-full overflow-hidden">
+          <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} className="mx-auto" preserveAspectRatio="xMidYMid meet">
         {/* Grid lines */}
         <defs>
           <pattern id="grid" width={xScale} height={yScale} patternUnits="userSpaceOnUse">
@@ -171,24 +203,79 @@ export const MathGraph = ({ type, parameters = {}, width = 600, height = 400 }: 
             </text>
           </g>
         ))}
-      </svg>
-      
-      {/* Legend */}
-      {discriminant !== undefined && (
-        <div className="mt-4 text-sm text-center space-y-1">
-          <p className="font-semibold">
-            Discriminant Δ = {discriminant > 0 ? discriminant.toFixed(2) : discriminant}
-          </p>
-          <p className="text-muted-foreground">
-            {discriminant > 0 && "Δ > 0: Two real solutions (parabola crosses x-axis twice)"}
-            {discriminant === 0 && "Δ = 0: One real solution (parabola touches x-axis once)"}
-            {discriminant < 0 && "Δ < 0: No real solutions (parabola doesn't touch x-axis)"}
-          </p>
+        </svg>
         </div>
-      )}
-      
-      {parameters.label && (
-        <p className="mt-2 text-center text-sm font-medium">{parameters.label}</p>
+        
+        {/* Legend */}
+        {discriminant !== undefined && (
+          <div className="mt-4 text-sm text-center space-y-1">
+            <p className="font-semibold">
+              {interactive ? `${a}x² + ${b}x + ${c} = 0` : parameters.label}
+            </p>
+            <p className="font-semibold">
+              Discriminant Δ = {discriminant > 0 ? discriminant.toFixed(2) : discriminant}
+            </p>
+            <p className="text-muted-foreground">
+              {discriminant > 0 && "Δ > 0: Two real solutions (parabola crosses x-axis twice)"}
+              {discriminant === 0 && "Δ = 0: One real solution (parabola touches x-axis once)"}
+              {discriminant < 0 && "Δ < 0: No real solutions (parabola doesn't touch x-axis)"}
+            </p>
+          </div>
+        )}
+      </Card>
+
+      {/* Interactive Controls */}
+      {interactive && (
+        <Card className="p-4 space-y-4 bg-secondary/20">
+          <h3 className="font-semibold text-sm">Adjust Parameters</h3>
+          
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm flex items-center justify-between mb-2">
+                <span>Coefficient a (x²):</span>
+                <span className="font-mono font-semibold">{interactiveA.toFixed(1)}</span>
+              </label>
+              <Slider
+                value={[interactiveA]}
+                onValueChange={([val]) => setInteractiveA(val)}
+                min={-5}
+                max={5}
+                step={0.1}
+                className="w-full"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm flex items-center justify-between mb-2">
+                <span>Coefficient b (x):</span>
+                <span className="font-mono font-semibold">{interactiveB.toFixed(1)}</span>
+              </label>
+              <Slider
+                value={[interactiveB]}
+                onValueChange={([val]) => setInteractiveB(val)}
+                min={-10}
+                max={10}
+                step={0.1}
+                className="w-full"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm flex items-center justify-between mb-2">
+                <span>Constant c:</span>
+                <span className="font-mono font-semibold">{interactiveC.toFixed(1)}</span>
+              </label>
+              <Slider
+                value={[interactiveC]}
+                onValueChange={([val]) => setInteractiveC(val)}
+                min={-10}
+                max={10}
+                step={0.1}
+                className="w-full"
+              />
+            </div>
+          </div>
+        </Card>
       )}
     </div>
   );

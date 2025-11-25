@@ -53,12 +53,13 @@ export const StepQuestionDialog = ({
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
       if (lastMessage.role === "assistant") {
-        // Check if the response mentions graphs or visual mathematical concepts
-        const graphKeywords = ["graph", "parabola", "curve", "plot", "discriminant", "root", "solution", "x-axis", "y-axis", "coordinate"];
-        const hasGraphContext = graphKeywords.some(keyword => 
-          lastMessage.content.toLowerCase().includes(keyword)
-        );
-        setCanGenerateVisual(hasGraphContext);
+        // Only show button for specific quadratic/parabola contexts
+        const content = lastMessage.content.toLowerCase();
+        const hasQuadraticContext = 
+          (content.includes("parabola") || content.includes("quadratic")) &&
+          (content.includes("discriminant") || content.includes("root") || content.includes("solution") || content.includes("x-axis"));
+        
+        setCanGenerateVisual(hasQuadraticContext);
       }
     }
   }, [messages]);
@@ -278,6 +279,7 @@ export const StepQuestionDialog = ({
                     <MathGraph
                       type={message.graphData.type}
                       parameters={message.graphData.parameters}
+                      interactive={true}
                     />
                   </div>
                 )}
@@ -301,7 +303,7 @@ export const StepQuestionDialog = ({
                 disabled={isLoading}
               >
                 <Image className="w-4 h-4 mr-2" />
-                Generate Visual Example
+                Generate Interactive Graph
               </Button>
             )}
             
