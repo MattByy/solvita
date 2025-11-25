@@ -99,16 +99,14 @@ export default function VideoLibrary() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
-      <Navigation />
-      
-      <main className="container mx-auto px-4 pt-24 pb-12">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              Video Lesson Library
-            </h1>
+      <main className="container mx-auto px-4 py-6 max-w-6xl">
+        <div className="flex flex-col gap-6">
+          <Navigation />
+          
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold">Video Library</h1>
             <p className="text-muted-foreground">
-              Watch comprehensive video lessons with interactive transcripts
+              Watch comprehensive lessons with interactive transcripts
             </p>
           </div>
 
@@ -208,7 +206,7 @@ export default function VideoLibrary() {
                       ))}
                     </div>
                     <p className="text-xs text-muted-foreground mt-4">
-                      💡 Tip: Click any timestamp to jump to that part of the video
+                      Tip: Click any timestamp to jump to that part of the video
                     </p>
                   </Card>
                 </>

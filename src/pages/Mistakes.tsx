@@ -34,25 +34,16 @@ const Mistakes = () => {
   const mostChallengingTopic = Object.entries(topicStats).sort((a, b) => b[1] - a[1])[0];
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <AlertCircle className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Mistake Tracker</h1>
-                <p className="text-sm text-muted-foreground">Learn from your errors</p>
-              </div>
-            </div>
-          </div>
-          <Navigation />
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
       <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="flex flex-col gap-6">
+          <Navigation />
+          
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold">Mistake Tracker</h1>
+            <p className="text-muted-foreground">Learn from your errors and improve</p>
+          </div>
+
         <div className="space-y-6">
           {/* Statistics Cards */}
           <div className="grid md:grid-cols-3 gap-4">
@@ -190,6 +181,7 @@ const Mistakes = () => {
               </li>
             </ul>
           </Card>
+        </div>
         </div>
       </div>
     </div>

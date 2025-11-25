@@ -93,43 +93,29 @@ const Home = () => {
             </p>
           </div>
 
-          {/* Exam Countdown & Progress */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <Card className="border-primary/20">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Target className="h-5 w-5 text-primary" />
-                  Test Date
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-1">
-                  <p className="text-2xl font-bold text-foreground">
-                    {daysUntilExam === 0 ? 'Today' : `${daysUntilExam} days`}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {format(parseISO(plan.test_date), 'MMM d, yyyy')}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-primary/20">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-primary" />
-                  Progress
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Progress value={progressPercentage} className="h-2" />
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{completedTasks.length} completed</span>
-                  <span className="font-medium">{Math.round(progressPercentage)}%</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Combined Progress Summary */}
+          <Card className="p-6 border-primary/20">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h2 className="text-2xl font-bold">Learning Plan</h2>
+                <p className="text-sm text-muted-foreground">
+                  Grade {plan.grade} • {plan.topic_name}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold">{Math.round(progressPercentage)}%</p>
+              </div>
+            </div>
+            
+            <Progress value={progressPercentage} className="h-2 mb-4" />
+            
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>{completedTasks.length} of {tasks.length} tasks completed</span>
+              <span>
+                Test in {daysUntilExam > 0 ? `${daysUntilExam} days` : "today"} • {format(parseISO(plan.test_date), "MMM d, yyyy")}
+              </span>
+            </div>
+          </Card>
 
 
           {/* Today's Tasks */}
