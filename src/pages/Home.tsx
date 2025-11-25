@@ -9,6 +9,9 @@ import { useLearningPlan } from "@/hooks/useLearningPlan";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle2, Circle, Calendar, BookOpen, Target, Loader2, Settings } from "lucide-react";
 import { format, differenceInDays, parseISO, isToday, isPast } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { SessionManager } from "@/lib/sessionManager";
+import { toast } from "sonner";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -58,22 +61,34 @@ const Home = () => {
   const daysUntilExam = differenceInDays(parseISO(plan.test_date), today);
 
 
-  const navigateToTask = (taskType: string) => {
-    // Since all daily tasks now encompass theory + practice + quiz, 
-    // we'll primarily navigate to the practice page which is most comprehensive
-    switch (taskType) {
-      case 'theory':
-        navigate('/practice'); // Practice page has theory components
-        break;
-      case 'practice':
-        navigate('/practice');
-        break;
-      case 'review':
-        navigate('/mistakes');
-        break;
-      case 'quiz':
-        navigate('/practice'); // Practice page includes quiz functionality
-        break;
+  const navigateToTask = async (task: any) => {
+    try {
+      const sessionId = SessionManager.getSession();
+      if (!sessionId) return;
+
+      // Fetch progress for this task
+      const { data: progressData } = await supabase
+        .from('task_progress')
+        .select('*')
+        .eq('task_id', task.id)
+        .eq('session_id', sessionId)
+        .maybeSingle();
+
+      // Determine where to navigate based on progress
+      if (!progressData || !progressData.quiz_passed) {
+        // Quiz not passed yet - go to theory/quiz
+        navigate('/learn');
+      } else if (progressData.exercises_completed < 4) {
+        // Quiz passed but exercises not done - go to exercises
+        navigate('/exercice');
+      } else {
+        // Task fully complete
+        toast.info("This task is already completed!");
+      }
+    } catch (error) {
+      console.error('Error checking task progress:', error);
+      // Default to learn page if error
+      navigate('/learn');
     }
   };
 
@@ -133,7 +148,7 @@ const Home = () => {
                       {todayTasks.length} {todayTasks.length === 1 ? 'task' : 'tasks'} scheduled
                     </CardDescription>
                   </div>
-                  <Button onClick={() => navigateToTask('practice')} size="lg">
+                  <Button onClick={() => todayTasks.length > 0 && navigateToTask(todayTasks[0])} size="lg">
                     Start
                   </Button>
                 </div>
