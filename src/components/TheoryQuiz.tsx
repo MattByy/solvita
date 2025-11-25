@@ -39,7 +39,7 @@ export const TheoryQuiz = ({ questions, onComplete, onReadTheory, onRetry }: The
 
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
-      setSelectedAnswer(userAnswers[currentQuestion + 1]);
+      setSelectedAnswer(newAnswers[currentQuestion + 1]);
     } else {
       // Quiz complete - show results
       const finalScore = newAnswers.reduce((score, answer, index) => {
@@ -155,7 +155,11 @@ export const TheoryQuiz = ({ questions, onComplete, onReadTheory, onRetry }: The
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="text-lg font-medium">{currentQ.question}</div>
+        <div className="text-lg font-medium prose dark:prose-invert">
+          <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+            {currentQ.question}
+          </ReactMarkdown>
+        </div>
         
         <RadioGroup
           value={selectedAnswer?.toString()}
