@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, ChevronRight, Loader2 } from "lucide-react";
+import { BookOpen, ChevronRight, Loader2, ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -244,6 +244,15 @@ const StepByStep = () => {
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <div className="flex flex-col gap-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/')}
+            className="self-start"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Home
+          </Button>
+
           <Card className="p-6">
             <div className="mb-6">
               <h2 className="text-3xl font-bold mb-2">{currentLesson.title}</h2>

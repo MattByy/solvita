@@ -70,20 +70,30 @@ export const TheoryQuiz = ({ questions, onComplete, onReadTheory, onRetry }: The
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>Quiz Results</CardTitle>
+          <CardTitle className="flex items-center gap-3">
+            Quiz Results
+            <span className="text-base text-muted-foreground font-normal">
+              {score}/{questions.length}
+            </span>
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="text-center p-6 bg-secondary/20 rounded-lg">
-            <div className={`text-lg font-semibold mb-3 ${showPracticeButton ? 'text-green-600' : 'text-destructive'}`}>
-              {showPracticeButton ? '🎉 Quiz Passed!' : '📚 Keep Learning'}
-            </div>
-            <p className="text-3xl font-bold mb-2">
-              {score}/{questions.length}
-            </p>
-            <p className="text-muted-foreground">
-              {Math.round((score / questions.length) * 100)}% correct
-            </p>
+          <div className="flex gap-3 justify-center">
+            <Button variant="outline" onClick={onReadTheory} className="flex-1">
+              Read Theory Again
+            </Button>
+            <Button onClick={onRetry} className="flex-1">
+              Retry Quiz
+            </Button>
           </div>
+          
+          {showPracticeButton && (
+            <div>
+              <Button onClick={() => navigate("/practice")} className="w-full" size="lg">
+                Start Practice
+              </Button>
+            </div>
+          )}
 
           <div className="space-y-6">
             {questions.map((q, index) => {
@@ -136,23 +146,6 @@ export const TheoryQuiz = ({ questions, onComplete, onReadTheory, onRetry }: The
               );
             })}
           </div>
-
-          <div className="flex gap-3 justify-center mt-6">
-            <Button variant="outline" onClick={onReadTheory} className="flex-1">
-              Read Theory Again
-            </Button>
-            <Button onClick={onRetry} className="flex-1">
-              Retry Quiz
-            </Button>
-          </div>
-          
-          {showPracticeButton && (
-            <div className="mt-4">
-              <Button onClick={() => navigate("/practice")} className="w-full" size="lg">
-                Start Practice
-              </Button>
-            </div>
-          )}
         </CardContent>
       </Card>
     );
