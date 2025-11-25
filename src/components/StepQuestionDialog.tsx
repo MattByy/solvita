@@ -25,6 +25,7 @@ interface StepQuestionDialogProps {
   stepExplanation: string;
   stepExample?: string;
   topic: string;
+  gradeLevel: string;
 }
 
 export const StepQuestionDialog = ({
@@ -32,6 +33,7 @@ export const StepQuestionDialog = ({
   stepExplanation,
   stepExample,
   topic,
+  gradeLevel,
 }: StepQuestionDialogProps) => {
   const [open, setOpen] = useState(false);
   const [question, setQuestion] = useState("");
@@ -66,8 +68,9 @@ export const StepQuestionDialog = ({
             stepContent,
             stepExplanation,
             stepExample,
-            userQuestion: question,
+            userQuestion: userMessage.content,
             topic,
+            gradeLevel,
             conversationHistory: messages,
           }),
         }
