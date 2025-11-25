@@ -14,7 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      learning_plans: {
+        Row: {
+          created_at: string
+          grade: string
+          id: string
+          session_id: string | null
+          test_date: string
+          topic_id: string
+          topic_name: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          grade: string
+          id?: string
+          session_id?: string | null
+          test_date: string
+          topic_id: string
+          topic_name: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          grade?: string
+          id?: string
+          session_id?: string | null
+          test_date?: string
+          topic_id?: string
+          topic_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      learning_tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          day_number: number
+          description: string
+          id: string
+          is_completed: boolean
+          plan_id: string
+          scheduled_date: string
+          task_type: string
+          title: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          day_number: number
+          description: string
+          id?: string
+          is_completed?: boolean
+          plan_id: string
+          scheduled_date: string
+          task_type: string
+          title: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          day_number?: number
+          description?: string
+          id?: string
+          is_completed?: boolean
+          plan_id?: string
+          scheduled_date?: string
+          task_type?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_tasks_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "learning_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
