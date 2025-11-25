@@ -91,6 +91,21 @@ const Exercise = () => {
   const currentProblem = sampleProblems[currentProblemIndex];
   const isAllComplete = completedCount >= 4;
 
+  const getNextTask = () => {
+    const incompleteTasks = tasks
+      .filter(t => !t.is_completed)
+      .sort((a, b) => a.day_number - b.day_number);
+    return incompleteTasks[0] || null;
+  };
+
+  const handleKeepLearning = () => {
+    const nextTask = getNextTask();
+    if (nextTask) {
+      localStorage.setItem('currentTaskId', nextTask.id);
+      navigate('/learn');
+    }
+  };
+
   const goToNextQuestion = async () => {
     if (completedCount >= 4) {
       return; // Already completed all exercises
@@ -115,14 +130,9 @@ const Exercise = () => {
           
           // If completed all 4 exercises, mark task as complete
           if (newCount >= 4) {
-            setTimeout(async () => {
-              setIsCompleting(true);
-              await markTaskComplete(todayTask.id);
-              toast.success("Task completed! Great work!");
-              setTimeout(() => {
-                navigate('/');
-              }, 2000);
-            }, 1500);
+            setIsCompleting(true);
+            await markTaskComplete(todayTask.id);
+            toast.success("Task completed! Great work!");
             return;
           }
         } catch (error) {
@@ -173,12 +183,24 @@ const Exercise = () => {
                 <div>
                   <h2 className="text-3xl font-bold mb-2">Excellent Work!</h2>
                   <p className="text-muted-foreground text-lg">
-                    You've completed all 4 exercises. Returning to your learning plan...
+                    You've completed all 4 exercises.
                   </p>
                 </div>
                 <Badge variant="secondary" className="text-lg px-4 py-2">
                   {completedCount}/4 Exercises Completed ✓
                 </Badge>
+                <div className="flex flex-col gap-3 max-w-sm mx-auto pt-4">
+                  {getNextTask() && (
+                    <Button onClick={handleKeepLearning} size="lg" className="w-full">
+                      Keep Learning
+                      <ChevronRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  )}
+                  <Button onClick={() => navigate('/')} variant="outline" size="lg" className="w-full">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Home
+                  </Button>
+                </div>
               </div>
             ) : (
               <>
