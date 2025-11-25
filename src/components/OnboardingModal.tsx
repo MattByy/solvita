@@ -289,20 +289,46 @@ export const OnboardingModal = ({ open, onComplete, existingPlan, onClose }: Onb
       const sessionId = getOrCreateSessionId();
 
       // Check if a plan already exists for this session
-      const { data: existingPlan } = await supabase
+      const { data: existingPlanData } = await supabase
         .from('learning_plans')
         .select('id')
         .eq('session_id', sessionId)
         .maybeSingle();
 
-      if (existingPlan) {
-        console.log('Plan already exists for this session, proceeding to home');
-        toast({
-          title: "Plan already exists!",
-          description: "You already have a learning plan. Taking you to your dashboard.",
-        });
-        onComplete();
-        return;
+      if (existingPlanData) {
+        // If user is switching plans (came from settings), delete old plan first
+        if (existingPlan) {
+          console.log('User switching plans - deleting old plan:', existingPlanData.id);
+          
+          // Delete old tasks first (foreign key constraint)
+          await supabase
+            .from('learning_tasks')
+            .delete()
+            .eq('plan_id', existingPlanData.id);
+          
+          // Delete old task progress
+          await supabase
+            .from('task_progress')
+            .delete()
+            .eq('session_id', sessionId);
+          
+          // Delete old plan
+          await supabase
+            .from('learning_plans')
+            .delete()
+            .eq('id', existingPlanData.id);
+            
+          console.log('Old plan deleted, proceeding with new plan creation');
+        } else {
+          // First-time user somehow has a plan - just redirect
+          console.log('Plan already exists for this session, proceeding to home');
+          toast({
+            title: "Plan already exists!",
+            description: "You already have a learning plan. Taking you to your dashboard.",
+          });
+          onComplete();
+          return;
+        }
       }
 
       const daysUntilTest = Math.ceil((testDateOnly.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
