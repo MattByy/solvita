@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ChevronRight, Lightbulb, PartyPopper } from "lucide-react";
+import { ArrowLeft, ChevronRight, Lightbulb, PartyPopper, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+
 import { Badge } from "@/components/ui/badge";
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
@@ -81,10 +81,8 @@ const sampleProblems: Problem[] = [
 const Exercise = () => {
   const navigate = useNavigate();
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
-  const [userAnswer, setUserAnswer] = useState("");
   const [showHint, setShowHint] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [completedCount, setCompletedCount] = useState(0);
   const [isCompleting, setIsCompleting] = useState(false);
   const { tasks, markTaskComplete } = useLearningPlan();
@@ -93,86 +91,78 @@ const Exercise = () => {
   const currentProblem = sampleProblems[currentProblemIndex];
   const isAllComplete = completedCount >= 4;
 
-  const checkAnswer = async () => {
-    const normalizedAnswer = userAnswer.trim().toLowerCase().replace(/\s+/g, "");
-    const normalizedCorrect = currentProblem.answer.toLowerCase().replace(/\s+/g, "");
-    
-    if (normalizedAnswer === normalizedCorrect) {
-      setIsCorrect(true);
-      toast.success("Correct! Well done!");
-      
-      // Increment exercise count
-      const newCount = completedCount + 1;
-      setCompletedCount(newCount);
-
-      // Save progress to database
-      const sessionId = SessionManager.getSession();
-      if (sessionId && tasks.length > 0) {
-        const todayTask = tasks.find(t => {
-          const taskDate = new Date(t.scheduled_date);
-          const today = new Date();
-          return taskDate.toDateString() === today.toDateString() && !t.is_completed;
-        });
-
-        if (todayTask) {
-          try {
-            await incrementExercise(todayTask.id);
-            
-            // If completed all 4 exercises, mark task as complete
-            if (newCount >= 4) {
-              setTimeout(async () => {
-                setIsCompleting(true);
-                await markTaskComplete(todayTask.id);
-                toast.success("Task completed! Great work!");
-                setTimeout(() => {
-                  navigate('/');
-                }, 2000);
-              }, 1500);
-            }
-          } catch (error) {
-            console.error('Error saving exercise progress:', error);
-          }
-        }
-      }
-    } else {
-      setIsCorrect(false);
-      toast.error("Not quite right. Try again or check the hint!");
-    }
-  };
-
-  const nextProblem = () => {
+  const goToNextQuestion = async () => {
     if (completedCount >= 4) {
       return; // Already completed all exercises
     }
-    
+
+    // Increment exercise count
+    const newCount = completedCount + 1;
+    setCompletedCount(newCount);
+
+    // Save progress to database
+    const sessionId = SessionManager.getSession();
+    if (sessionId && tasks.length > 0) {
+      const todayTask = tasks.find(t => {
+        const taskDate = new Date(t.scheduled_date);
+        const today = new Date();
+        return taskDate.toDateString() === today.toDateString() && !t.is_completed;
+      });
+
+      if (todayTask) {
+        try {
+          await incrementExercise(todayTask.id);
+          
+          // If completed all 4 exercises, mark task as complete
+          if (newCount >= 4) {
+            setTimeout(async () => {
+              setIsCompleting(true);
+              await markTaskComplete(todayTask.id);
+              toast.success("Task completed! Great work!");
+              setTimeout(() => {
+                navigate('/');
+              }, 2000);
+            }, 1500);
+            return;
+          }
+        } catch (error) {
+          console.error('Error saving exercise progress:', error);
+        }
+      }
+    }
+
+    // Move to next problem
     if (currentProblemIndex < sampleProblems.length - 1) {
       setCurrentProblemIndex(currentProblemIndex + 1);
-      setUserAnswer("");
-      setShowHint(false);
-      setShowSolution(false);
-      setIsCorrect(null);
     } else {
       // Loop back if more exercises needed
       setCurrentProblemIndex(0);
-      setUserAnswer("");
-      setShowHint(false);
-      setShowSolution(false);
-      setIsCorrect(null);
     }
+    
+    setShowHint(false);
+    setShowSolution(false);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <div className="flex flex-col gap-6">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/')}
-            className="self-start"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
-          </Button>
+          <div className="flex gap-3">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/')}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Home
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/learn')}
+            >
+              <BookOpen className="h-4 w-4 mr-2" />
+              Back to Theory
+            </Button>
+          </div>
 
           <Card className="p-6">
             {isCompleting || isAllComplete ? (
@@ -207,40 +197,11 @@ const Exercise = () => {
                   </div>
                 </div>
 
-                <Card className="p-6 bg-accent/5 border-accent mb-6 min-h-[300px] flex flex-col">
-                  <div className="prose prose-sm max-w-none mb-6 flex-1">
+                <Card className="p-6 bg-accent/5 border-accent mb-6">
+                  <div className="prose prose-sm max-w-none">
                     <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
                       {currentProblem.question}
                     </ReactMarkdown>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex gap-3">
-                      <Input
-                        type="text"
-                        placeholder="Enter your answer..."
-                        value={userAnswer}
-                        onChange={(e) => setUserAnswer(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && checkAnswer()}
-                        className="flex-1"
-                        disabled={isCorrect === true}
-                      />
-                      <Button onClick={checkAnswer} disabled={isCorrect === true || !userAnswer}>
-                        Check
-                      </Button>
-                    </div>
-
-                    {isCorrect !== null && (
-                      <div className={`p-4 rounded-lg border ${
-                        isCorrect 
-                          ? "bg-green-500/10 border-green-500/30 text-green-700 dark:text-green-400" 
-                          : "bg-destructive/10 border-destructive/30 text-destructive"
-                      }`}>
-                        <p className="font-medium">
-                          {isCorrect ? "✓ Correct!" : "✗ Incorrect"}
-                        </p>
-                      </div>
-                    )}
                   </div>
                 </Card>
 
@@ -271,35 +232,35 @@ const Exercise = () => {
                 )}
 
                 {showSolution && (
-                  <Card className="p-4 bg-secondary/10 border-secondary/20 mb-4">
-                    <p className="text-sm font-semibold mb-3">Detailed Solution:</p>
-                    <div className="space-y-3">
-                      {currentProblem.detailedSolution.map((step, idx) => (
-                        <div key={idx} className="space-y-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 prose prose-sm dark:prose-invert">
-                              <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-                                {step.step}
-                              </ReactMarkdown>
+                  <>
+                    <Card className="p-4 bg-secondary/10 border-secondary/20 mb-4">
+                      <p className="text-sm font-semibold mb-3">Detailed Solution:</p>
+                      <div className="space-y-3">
+                        {currentProblem.detailedSolution.map((step, idx) => (
+                          <div key={idx} className="space-y-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 prose prose-sm dark:prose-invert">
+                                <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                                  {step.step}
+                                </ReactMarkdown>
+                              </div>
+                              <ExerciseSolutionQuestion
+                                problemQuestion={currentProblem.question}
+                                stepContent={step.step}
+                                stepExplanation={step.explanation}
+                              />
                             </div>
-                            <ExerciseSolutionQuestion
-                              problemQuestion={currentProblem.question}
-                              stepContent={step.step}
-                              stepExplanation={step.explanation}
-                            />
+                            <p className="text-xs text-muted-foreground italic">{step.explanation}</p>
                           </div>
-                          <p className="text-xs text-muted-foreground italic">{step.explanation}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </Card>
-                )}
+                        ))}
+                      </div>
+                    </Card>
 
-                {isCorrect && (
-                  <Button onClick={nextProblem} className="w-full" size="lg">
-                    Next Problem
-                    <ChevronRight className="h-4 w-4 ml-2" />
-                  </Button>
+                    <Button onClick={goToNextQuestion} className="w-full" size="lg">
+                      Go to Next Question
+                      <ChevronRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </>
                 )}
               </>
             )}
