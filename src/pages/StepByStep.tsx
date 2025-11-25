@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { BookOpen, ChevronRight, Loader2, ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -199,6 +199,7 @@ const lessons: Record<string, Lesson> = {
 
 const StepByStep = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [selectedGrade, setSelectedGrade] = useState("9");
   const [selectedTopic, setSelectedTopic] = useState("9-quadratics");
   const [currentStep, setCurrentStep] = useState(0);
@@ -209,6 +210,13 @@ const StepByStep = () => {
   const { markQuizPassed } = useTaskProgress();
 
   useEffect(() => {
+    // Check if in review mode (from "Back to Theory" button)
+    const isReviewMode = searchParams.get('review') === 'true';
+    if (isReviewMode) {
+      // Skip redirect if in review mode
+      return;
+    }
+
     // Check if quiz already passed for today's task
     const checkProgress = async () => {
       const sessionId = SessionManager.getSession();
@@ -238,7 +246,7 @@ const StepByStep = () => {
     };
 
     checkProgress();
-  }, [tasks, navigate]);
+  }, [tasks, navigate, searchParams]);
 
   const currentLesson = lessons[selectedTopic] || lessons["9-quadratics"];
   const totalSteps = currentLesson.steps.length;
