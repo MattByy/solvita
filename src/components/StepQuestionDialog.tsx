@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, X } from "lucide-react";
+import { MessageCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
@@ -13,8 +20,6 @@ interface StepQuestionDialogProps {
   stepExplanation: string;
   stepExample?: string;
   topic: string;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
 }
 
 export const StepQuestionDialog = ({
@@ -22,9 +27,8 @@ export const StepQuestionDialog = ({
   stepExplanation,
   stepExample,
   topic,
-  open = false,
-  onOpenChange,
 }: StepQuestionDialogProps) => {
+  const [open, setOpen] = useState(false);
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -114,27 +118,27 @@ export const StepQuestionDialog = ({
     }
   };
 
-  if (!open) return null;
-
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-lg font-semibold">Ask About This Step</h2>
-          <p className="text-sm text-muted-foreground">
-            Have a question? Ask the AI tutor for help!
-          </p>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onOpenChange?.(false)}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setOpen(true)}
+      >
+        <MessageCircle className="w-4 h-4 mr-1" />
+        Ask AI
+      </Button>
 
-      <div className="space-y-4 flex-1 overflow-y-auto">
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Ask About This Step</SheetTitle>
+            <SheetDescription>
+              Have a question about this step? Ask the AI tutor for help!
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="space-y-4 mt-6">
             <div className="p-4 bg-secondary/30 rounded-lg">
               <p className="text-sm font-medium mb-2">Step:</p>
               <div className="prose prose-sm dark:prose-invert">
@@ -190,7 +194,9 @@ export const StepQuestionDialog = ({
                 </div>
               </div>
             )}
-      </div>
-    </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 };

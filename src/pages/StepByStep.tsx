@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookOpen, ChevronRight, MessageCircle } from "lucide-react";
+import { BookOpen, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -101,7 +101,6 @@ const StepByStep = () => {
   const [selectedGrade, setSelectedGrade] = useState("9");
   const [selectedTopic, setSelectedTopic] = useState("9-quadratics");
   const [currentStep, setCurrentStep] = useState(0);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const currentLesson = lessons[selectedTopic] || lessons["9-quadratics"];
   const totalSteps = currentLesson.steps.length;
@@ -125,9 +124,8 @@ const StepByStep = () => {
         </div>
       </header>
 
-      <div className="flex w-full">
-        <div className={`container mx-auto px-4 py-6 transition-all ${sidebarOpen ? 'max-w-2xl' : 'max-w-4xl'}`}>
-          <div className="space-y-6">
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="space-y-6">
           <GradeTopicSelector
             selectedGrade={selectedGrade}
             selectedTopic={selectedTopic}
@@ -180,14 +178,12 @@ const StepByStep = () => {
                 <Card className="p-4 bg-primary/5 border-primary/20 mb-4">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-semibold text-primary">Example:</p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSidebarOpen(true)}
-                    >
-                      <MessageCircle className="w-4 h-4 mr-1" />
-                      Ask AI
-                    </Button>
+                    <StepQuestionDialog
+                      stepContent={currentLesson.steps[currentStep].title}
+                      stepExplanation={currentLesson.steps[currentStep].explanation}
+                      stepExample={currentLesson.steps[currentStep].example}
+                      topic={selectedTopic}
+                    />
                   </div>
                   <div className="prose prose-sm dark:prose-invert">
                     <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
@@ -221,21 +217,7 @@ const StepByStep = () => {
               </Button>
             </div>
           </Card>
-          </div>
         </div>
-
-        {sidebarOpen && (
-          <div className="w-96 border-l border-border bg-card p-6 overflow-y-auto">
-            <StepQuestionDialog
-              stepContent={currentLesson.steps[currentStep].title}
-              stepExplanation={currentLesson.steps[currentStep].explanation}
-              stepExample={currentLesson.steps[currentStep].example}
-              topic={selectedTopic}
-              open={sidebarOpen}
-              onOpenChange={setSidebarOpen}
-            />
-          </div>
-        )}
       </div>
     </div>
   );
