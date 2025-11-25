@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { stepContent, stepExplanation, stepExample, userQuestion, topic } = await req.json();
+    const { stepContent, stepExplanation, stepExample, userQuestion, topic, conversationHistory } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -26,9 +26,13 @@ The topic is: ${topic}
 The step shows: ${stepContent}
 The explanation provided was: ${stepExplanation}${exampleContext}
 
-The student's question is: ${userQuestion}
+CRITICAL: Keep your responses concise - maximum 5 sentences. Provide a clear, encouraging answer that helps them understand the concept better. Use proper mathematical notation with LaTeX format for equations (wrap inline math in $ symbols and display math in $$ symbols). Be patient and break down complex ideas into simple terms.`;
 
-Provide a clear, encouraging answer that helps them understand the concept better. Use proper mathematical notation with LaTeX format for equations (wrap inline math in $ symbols and display math in $$ symbols). Be patient and break down complex ideas. If they're confused about the step, explain it in a different way or provide an additional example.`;
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...(conversationHistory || []),
+      { role: "user", content: userQuestion }
+    ];
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -38,10 +42,7 @@ Provide a clear, encouraging answer that helps them understand the concept bette
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userQuestion }
-        ],
+        messages: messages,
         stream: true,
       }),
     });
