@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, ChevronRight, Loader2, ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -14,6 +14,9 @@ import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
+import { useLearningPlan } from "@/hooks/useLearningPlan";
+import { useTaskProgress } from "@/hooks/useTaskProgress";
+import { SessionManager } from "@/lib/sessionManager";
 
 interface QuizQuestion {
   question: string;
@@ -202,6 +205,40 @@ const StepByStep = () => {
   const [showQuiz, setShowQuiz] = useState(false);
   const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+  const { tasks } = useLearningPlan();
+  const { markQuizPassed } = useTaskProgress();
+
+  useEffect(() => {
+    // Check if quiz already passed for today's task
+    const checkProgress = async () => {
+      const sessionId = SessionManager.getSession();
+      if (!sessionId || tasks.length === 0) return;
+
+      // Get today's task
+      const todayTask = tasks.find(t => {
+        const taskDate = new Date(t.scheduled_date);
+        const today = new Date();
+        return taskDate.toDateString() === today.toDateString() && !t.is_completed;
+      });
+
+      if (!todayTask) return;
+
+      // Check if quiz passed
+      const { data: progressData } = await supabase
+        .from('task_progress')
+        .select('quiz_passed')
+        .eq('task_id', todayTask.id)
+        .eq('session_id', sessionId)
+        .maybeSingle();
+
+      if (progressData?.quiz_passed) {
+        // Quiz already passed, redirect to exercises
+        navigate('/exercice');
+      }
+    };
+
+    checkProgress();
+  }, [tasks, navigate]);
 
   const currentLesson = lessons[selectedTopic] || lessons["9-quadratics"];
   const totalSteps = currentLesson.steps.length;
@@ -215,9 +252,32 @@ const StepByStep = () => {
     toast.success("Quiz ready! Test your understanding.");
   };
 
-  const handleQuizComplete = (score: number) => {
+  const handleQuizComplete = async (score: number) => {
     const percentage = Math.round((score / quizQuestions.length) * 100);
+    const mistakes = quizQuestions.length - score;
+    
     toast.success(`Quiz complete! You scored ${score}/${quizQuestions.length} (${percentage}%)`);
+
+    // If passed (2 or fewer mistakes), mark progress
+    if (mistakes <= 2) {
+      const sessionId = SessionManager.getSession();
+      if (!sessionId || tasks.length === 0) return;
+
+      // Get today's task
+      const todayTask = tasks.find(t => {
+        const taskDate = new Date(t.scheduled_date);
+        const today = new Date();
+        return taskDate.toDateString() === today.toDateString() && !t.is_completed;
+      });
+
+      if (todayTask) {
+        try {
+          await markQuizPassed(todayTask.id);
+        } catch (error) {
+          console.error('Error saving quiz progress:', error);
+        }
+      }
+    }
   };
 
   const handleReadTheory = () => {

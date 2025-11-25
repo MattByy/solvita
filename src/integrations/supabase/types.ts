@@ -94,6 +94,47 @@ export type Database = {
           },
         ]
       }
+      task_progress: {
+        Row: {
+          created_at: string | null
+          current_phase: string | null
+          exercises_completed: number | null
+          id: string
+          quiz_passed: boolean | null
+          session_id: string
+          task_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_phase?: string | null
+          exercises_completed?: number | null
+          id?: string
+          quiz_passed?: boolean | null
+          session_id: string
+          task_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_phase?: string | null
+          exercises_completed?: number | null
+          id?: string
+          quiz_passed?: boolean | null
+          session_id?: string
+          task_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_progress_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "learning_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
