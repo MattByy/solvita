@@ -385,6 +385,9 @@ export const OnboardingModal = ({ open, onComplete }: OnboardingModalProps) => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       onComplete();
+      
+      // Navigate to learn page after completing onboarding
+      window.location.href = '/learn';
     } catch (error) {
       console.error('Error generating plan:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';

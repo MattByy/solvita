@@ -244,31 +244,6 @@ const StepByStep = () => {
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <div className="flex flex-col gap-6">
-          <Navigation />
-          
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold">Step-by-Step Learning</h1>
-            <p className="text-muted-foreground">Master concepts one step at a time</p>
-          </div>
-
-        <div className="space-y-6">
-          <GradeTopicSelector
-            selectedGrade={selectedGrade}
-            selectedTopic={selectedTopic}
-            onGradeChange={(grade) => {
-              setSelectedGrade(grade);
-              const topics = curriculumTopics[grade];
-              if (topics && topics.length > 0) {
-                setSelectedTopic(topics[0].id);
-                setCurrentStep(0);
-              }
-            }}
-            onTopicChange={(topic) => {
-              setSelectedTopic(topic);
-              setCurrentStep(0);
-            }}
-          />
-
           <Card className="p-6">
             <div className="mb-6">
               <h2 className="text-3xl font-bold mb-2">{currentLesson.title}</h2>
@@ -360,7 +335,6 @@ const StepByStep = () => {
               />
             )}
           </Card>
-        </div>
         </div>
       </div>
     </div>
