@@ -160,7 +160,7 @@ const StepByStep = () => {
               </div>
             </div>
 
-            <Card className="p-6 bg-accent/5 border-accent mb-6">
+            <Card className="p-6 bg-accent/5 border-accent mb-6 min-h-[400px] flex flex-col">
               <div className="mb-4">
                 <h3 className="text-xl font-semibold flex items-center gap-2">
                   <ChevronRight className="h-5 w-5 text-primary" />
@@ -168,7 +168,7 @@ const StepByStep = () => {
                 </h3>
               </div>
 
-              <div className="prose prose-sm max-w-none dark:prose-invert mb-4">
+              <div className="prose prose-sm max-w-none dark:prose-invert mb-4 flex-1">
                 <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
                   {currentLesson.steps[currentStep].explanation}
                 </ReactMarkdown>
@@ -183,6 +183,7 @@ const StepByStep = () => {
                       stepExplanation={currentLesson.steps[currentStep].explanation}
                       stepExample={currentLesson.steps[currentStep].example}
                       topic={selectedTopic}
+                      gradeLevel={selectedGrade}
                     />
                   </div>
                   <div className="prose prose-sm dark:prose-invert">

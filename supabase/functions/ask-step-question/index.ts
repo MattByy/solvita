@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { stepContent, stepExplanation, stepExample, userQuestion, topic, conversationHistory } = await req.json();
+    const { stepContent, stepExplanation, stepExample, userQuestion, topic, gradeLevel, conversationHistory } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -19,14 +19,16 @@ serve(async (req) => {
     }
 
     const exampleContext = stepExample ? `\n\nThe example provided is: ${stepExample}` : '';
+    
+    const gradeContext = gradeLevel ? `\n\nIMPORTANT: The student is in grade ${gradeLevel}. Adjust your explanations to be appropriate for this grade level. Use age-appropriate language and mathematical concepts they would understand at this level. Don't introduce concepts they haven't learned yet.` : '';
 
     const systemPrompt = `You are a helpful math tutor assistant. A student is working through a step-by-step problem solution and has a question about a specific step. 
 
 The topic is: ${topic}
 The step shows: ${stepContent}
-The explanation provided was: ${stepExplanation}${exampleContext}
+The explanation provided was: ${stepExplanation}${exampleContext}${gradeContext}
 
-CRITICAL: Keep your responses concise - maximum 5 sentences. Provide a clear, encouraging answer that helps them understand the concept better. Use proper mathematical notation with LaTeX format for equations (wrap inline math in $ symbols and display math in $$ symbols). Be patient and break down complex ideas into simple terms.`;
+CRITICAL: Keep your responses concise - maximum 5 sentences. Provide a clear, encouraging answer that helps them understand the concept better. Use proper mathematical notation with LaTeX format for equations (wrap inline math in $ symbols and display math in $$ symbols). Be patient and break down complex ideas into simple terms appropriate for their grade level.`;
 
     const messages = [
       { role: "system", content: systemPrompt },
