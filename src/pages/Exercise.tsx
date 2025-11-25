@@ -14,6 +14,7 @@ import { useLearningPlan } from "@/hooks/useLearningPlan";
 import { useTaskProgress } from "@/hooks/useTaskProgress";
 import { SessionManager } from "@/lib/sessionManager";
 import { supabase } from "@/integrations/supabase/client";
+import { ExerciseSolutionQuestion } from "@/components/ExerciseSolutionQuestion";
 
 interface DetailedStep {
   step: string;
@@ -275,10 +276,17 @@ const Exercise = () => {
                     <div className="space-y-3">
                       {currentProblem.detailedSolution.map((step, idx) => (
                         <div key={idx} className="space-y-1">
-                          <div className="prose prose-sm dark:prose-invert">
-                            <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-                              {step.step}
-                            </ReactMarkdown>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 prose prose-sm dark:prose-invert">
+                              <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                                {step.step}
+                              </ReactMarkdown>
+                            </div>
+                            <ExerciseSolutionQuestion
+                              problemQuestion={currentProblem.question}
+                              stepContent={step.step}
+                              stepExplanation={step.explanation}
+                            />
                           </div>
                           <p className="text-xs text-muted-foreground italic">{step.explanation}</p>
                         </div>

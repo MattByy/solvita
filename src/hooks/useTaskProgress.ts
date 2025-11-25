@@ -71,17 +71,41 @@ export const useTaskProgress = (taskId?: string) => {
       const sessionId = SessionManager.getSession();
       if (!sessionId) return;
 
-      const { error } = await supabase
+      // First, ensure progress record exists
+      const { data: existingProgress } = await supabase
         .from('task_progress')
-        .update({ 
-          quiz_passed: true, 
-          current_phase: 'exercises',
-          updated_at: new Date().toISOString()
-        })
+        .select('*')
         .eq('task_id', targetTaskId)
-        .eq('session_id', sessionId);
+        .eq('session_id', sessionId)
+        .maybeSingle();
 
-      if (error) throw error;
+      if (!existingProgress) {
+        // Create new record with quiz passed
+        const { error } = await supabase
+          .from('task_progress')
+          .insert({
+            task_id: targetTaskId,
+            session_id: sessionId,
+            quiz_passed: true,
+            exercises_completed: 0,
+            current_phase: 'exercises'
+          });
+
+        if (error) throw error;
+      } else {
+        // Update existing record
+        const { error } = await supabase
+          .from('task_progress')
+          .update({ 
+            quiz_passed: true, 
+            current_phase: 'exercises',
+            updated_at: new Date().toISOString()
+          })
+          .eq('task_id', targetTaskId)
+          .eq('session_id', sessionId);
+
+        if (error) throw error;
+      }
 
       // Update local state
       setProgress(prev => prev ? { 
@@ -103,36 +127,54 @@ export const useTaskProgress = (taskId?: string) => {
       const sessionId = SessionManager.getSession();
       if (!sessionId) return;
 
-      // First, get current count
+      // First, ensure progress record exists
       const { data: currentProgress } = await supabase
         .from('task_progress')
-        .select('exercises_completed')
+        .select('exercises_completed, quiz_passed')
         .eq('task_id', targetTaskId)
         .eq('session_id', sessionId)
-        .single();
+        .maybeSingle();
 
-      if (!currentProgress) return;
+      let newCount: number;
+      if (!currentProgress) {
+        // Create new record if it doesn't exist
+        newCount = 1;
+        const isCompleted = newCount >= 4;
+        
+        const { error } = await supabase
+          .from('task_progress')
+          .insert({
+            task_id: targetTaskId,
+            session_id: sessionId,
+            quiz_passed: true, // Assume quiz passed if we're doing exercises
+            exercises_completed: newCount,
+            current_phase: isCompleted ? 'completed' : 'exercises'
+          });
 
-      const newCount = currentProgress.exercises_completed + 1;
-      const isCompleted = newCount >= 4;
+        if (error) throw error;
+      } else {
+        // Update existing record
+        newCount = currentProgress.exercises_completed + 1;
+        const isCompleted = newCount >= 4;
 
-      const { error } = await supabase
-        .from('task_progress')
-        .update({ 
-          exercises_completed: newCount,
-          current_phase: isCompleted ? 'completed' : 'exercises',
-          updated_at: new Date().toISOString()
-        })
-        .eq('task_id', targetTaskId)
-        .eq('session_id', sessionId);
+        const { error } = await supabase
+          .from('task_progress')
+          .update({ 
+            exercises_completed: newCount,
+            current_phase: isCompleted ? 'completed' : 'exercises',
+            updated_at: new Date().toISOString()
+          })
+          .eq('task_id', targetTaskId)
+          .eq('session_id', sessionId);
 
-      if (error) throw error;
+        if (error) throw error;
+      }
 
       // Update local state
       setProgress(prev => prev ? { 
         ...prev, 
         exercises_completed: newCount,
-        current_phase: isCompleted ? 'completed' : 'exercises'
+        current_phase: newCount >= 4 ? 'completed' : 'exercises'
       } : null);
 
       return newCount;
