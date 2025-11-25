@@ -10,11 +10,14 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { MessageCircle, Loader2, Send, Image } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import { MathGraph } from "./MathGraph";
+import { TheoryQuiz } from "./TheoryQuiz";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   role: "user" | "assistant";
@@ -46,9 +49,13 @@ export const StepQuestionDialog = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [canGenerateVisual, setCanGenerateVisual] = useState(false);
-  const { toast } = useToast();
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
+  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+  const [canShowQuiz, setCanShowQuiz] = useState(false);
+  const { toast: toastHook } = useToast();
 
-  // Check if the last message context supports visual generation
+  // Check if the last message context supports visual generation and quiz
   useEffect(() => {
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
@@ -62,7 +69,49 @@ export const StepQuestionDialog = ({
         setCanGenerateVisual(hasQuadraticContext);
       }
     }
-  }, [messages]);
+
+    // Check if enough theory has been discussed (at least 3 AI responses)
+    const aiResponses = messages.filter(m => m.role === "assistant");
+    const hasSubstantialTheory = aiResponses.length >= 3 && 
+      aiResponses.some(m => m.content.length > 200);
+    
+    setCanShowQuiz(hasSubstantialTheory && !showQuiz);
+  }, [messages, showQuiz]);
+
+  const generateQuiz = async () => {
+    setIsGeneratingQuiz(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-quiz", {
+        body: {
+          conversationHistory: messages,
+          topic: topic,
+          gradeLevel: gradeLevel,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.questions && data.questions.length > 0) {
+        setQuizQuestions(data.questions);
+        setShowQuiz(true);
+        toast.success("Quiz generated!");
+      } else {
+        toast.error("Failed to generate quiz questions");
+      }
+    } catch (error) {
+      console.error("Error generating quiz:", error);
+      toast.error("Failed to generate quiz");
+    } finally {
+      setIsGeneratingQuiz(false);
+    }
+  };
+
+  const handleQuizComplete = (score: number) => {
+    const percentage = Math.round((score / quizQuestions.length) * 100);
+    toast.success(`Quiz complete! You scored ${score}/${quizQuestions.length} (${percentage}%)`);
+    setShowQuiz(false);
+    setQuizQuestions([]);
+  };
 
   const generateVisualExample = async () => {
     if (messages.length === 0) return;
@@ -109,7 +158,7 @@ export const StepQuestionDialog = ({
       }
     } catch (error) {
       console.error("Error generating graph:", error);
-      toast({
+      toastHook({
         title: "Error",
         description: "Failed to generate graph. Please try again.",
         variant: "destructive",
@@ -121,7 +170,7 @@ export const StepQuestionDialog = ({
 
   const askQuestion = async () => {
     if (!question.trim()) {
-      toast({
+      toastHook({
         title: "Please enter a question",
         variant: "destructive",
       });
@@ -205,7 +254,7 @@ export const StepQuestionDialog = ({
       }
     } catch (error) {
       console.error("Error asking question:", error);
-      toast({
+      toastHook({
         title: "Error",
         description: "Failed to get AI response. Please try again.",
         variant: "destructive",
@@ -311,6 +360,33 @@ export const StepQuestionDialog = ({
               <div className="flex items-center justify-center gap-2 text-muted-foreground p-3 bg-secondary/20 rounded-lg">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span className="text-sm">Creating visual example...</span>
+              </div>
+            )}
+
+            {canShowQuiz && !showQuiz && (
+              <Button
+                onClick={generateQuiz}
+                disabled={isGeneratingQuiz || isLoading}
+                className="w-full"
+                variant="default"
+              >
+                {isGeneratingQuiz ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating Quiz...
+                  </>
+                ) : (
+                  "Take Quiz on Theory"
+                )}
+              </Button>
+            )}
+
+            {showQuiz && quizQuestions.length > 0 && (
+              <div className="mb-4">
+                <TheoryQuiz
+                  questions={quizQuestions}
+                  onComplete={handleQuizComplete}
+                />
               </div>
             )}
 
