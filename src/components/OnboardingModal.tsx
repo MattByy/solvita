@@ -13,12 +13,18 @@ import { SessionManager } from "@/lib/sessionManager";
 interface OnboardingModalProps {
   open: boolean;
   onComplete: () => void;
+  existingPlan?: {
+    grade: string;
+    topicId: string;
+    topicName: string;
+  } | null;
+  onClose?: () => void;
 }
 
-export const OnboardingModal = ({ open, onComplete }: OnboardingModalProps) => {
+export const OnboardingModal = ({ open, onComplete, existingPlan, onClose }: OnboardingModalProps) => {
   const [step, setStep] = useState(1);
-  const [selectedGrade, setSelectedGrade] = useState("9");
-  const [selectedTopicId, setSelectedTopicId] = useState("");
+  const [selectedGrade, setSelectedGrade] = useState(existingPlan?.grade || "9");
+  const [selectedTopicId, setSelectedTopicId] = useState(existingPlan?.topicId || "");
   const [testDate, setTestDate] = useState<Date>();
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
@@ -402,8 +408,22 @@ export const OnboardingModal = ({ open, onComplete }: OnboardingModalProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()}>
+    <Dialog 
+      open={open} 
+      onOpenChange={(isOpen) => {
+        // Only allow closing if user has existing plan
+        if (!isOpen && existingPlan && onClose) {
+          onClose();
+        }
+      }}
+    >
+      <DialogContent 
+        className={`max-w-2xl ${!existingPlan ? '[&>button]:hidden' : ''}`}
+        onPointerDownOutside={(e) => {
+          // Prevent closing if no existing plan
+          if (!existingPlan) e.preventDefault();
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl">
             <Sparkles className="h-6 w-6 text-primary" />
