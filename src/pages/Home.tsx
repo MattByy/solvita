@@ -7,7 +7,7 @@ import { Navigation } from "@/components/Navigation";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import { useLearningPlan } from "@/hooks/useLearningPlan";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, Circle, Calendar, BookOpen, Target, Loader2, Settings } from "lucide-react";
+import { CheckCircle2, Circle, Calendar, BookOpen, Target, Loader2, Settings, AlertCircle } from "lucide-react";
 import { format, differenceInDays, parseISO, isToday, isPast } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { SessionManager } from "@/lib/sessionManager";
@@ -111,7 +111,15 @@ const Home = () => {
           <div className="flex items-center justify-between">
             <div className="flex-1" />
             <h1 className="text-4xl font-bold text-center">CorePus</h1>
-            <div className="flex-1 flex justify-end">
+            <div className="flex-1 flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => navigate('/mistakes')}
+                title="View Mistakes"
+              >
+                <AlertCircle className="h-5 w-5" />
+              </Button>
               <Button 
                 variant="outline" 
                 size="icon"

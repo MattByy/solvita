@@ -15,6 +15,9 @@ import { useTaskProgress } from "@/hooks/useTaskProgress";
 import { SessionManager } from "@/lib/sessionManager";
 import { supabase } from "@/integrations/supabase/client";
 import { ExerciseSolutionQuestion } from "@/components/ExerciseSolutionQuestion";
+import { mistakeStorage } from "@/lib/mistakeStorage";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface DetailedStep {
   step: string;
@@ -151,6 +154,7 @@ const Exercise = () => {
   const [showSolution, setShowSolution] = useState(false);
   const [completedCount, setCompletedCount] = useState(0);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [selectedIncorrectSteps, setSelectedIncorrectSteps] = useState<number[]>([]);
   const { tasks, markTaskComplete } = useLearningPlan();
   const { incrementExercise } = useTaskProgress();
 
@@ -188,6 +192,23 @@ const Exercise = () => {
   const goToNextQuestion = async () => {
     if (completedCount >= 4) {
       return; // Already completed all exercises
+    }
+
+    // Save mistake if any steps were marked incorrect
+    if (selectedIncorrectSteps.length > 0) {
+      const todayTask = tasks.find(t => {
+        const taskDate = new Date(t.scheduled_date);
+        const today = new Date();
+        return taskDate.toDateString() === today.toDateString() && !t.is_completed;
+      });
+
+      mistakeStorage.add({
+        type: 'exercise',
+        problem: currentProblem.question,
+        topic: todayTask?.title || topicId,
+        incorrectSteps: selectedIncorrectSteps,
+        stepDetails: currentProblem.detailedSolution,
+      });
     }
 
     // Increment exercise count
@@ -230,6 +251,7 @@ const Exercise = () => {
     
     setShowHint(false);
     setShowSolution(false);
+    setSelectedIncorrectSteps([]);
   };
 
   return (
@@ -352,6 +374,30 @@ const Exercise = () => {
                               />
                             </div>
                             <p className="text-xs text-muted-foreground italic">{step.explanation}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </Card>
+
+                    <Card className="p-4 bg-accent/5 border-accent/20 mb-4">
+                      <p className="text-sm font-semibold mb-3">Mark any steps you got wrong:</p>
+                      <div className="space-y-2">
+                        {currentProblem.detailedSolution.map((step, idx) => (
+                          <div key={idx} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`step-${idx}`}
+                              checked={selectedIncorrectSteps.includes(idx)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedIncorrectSteps([...selectedIncorrectSteps, idx]);
+                                } else {
+                                  setSelectedIncorrectSteps(selectedIncorrectSteps.filter(i => i !== idx));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`step-${idx}`} className="text-sm cursor-pointer">
+                              Step {idx + 1}
+                            </Label>
                           </div>
                         ))}
                       </div>

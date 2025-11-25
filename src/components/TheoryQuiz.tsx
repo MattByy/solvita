@@ -9,6 +9,8 @@ import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
+import { mistakeStorage } from "@/lib/mistakeStorage";
+import { useLearningPlan } from "@/hooks/useLearningPlan";
 
 interface QuizQuestion {
   question: string;
@@ -26,6 +28,7 @@ interface TheoryQuizProps {
 
 export const TheoryQuiz = ({ questions, onComplete, onReadTheory, onRetry }: TheoryQuizProps) => {
   const navigate = useNavigate();
+  const { tasks } = useLearningPlan();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [userAnswers, setUserAnswers] = useState<(number | null)[]>(Array(questions.length).fill(null));
@@ -48,6 +51,28 @@ export const TheoryQuiz = ({ questions, onComplete, onReadTheory, onRetry }: The
       const finalScore = newAnswers.reduce((score, answer, index) => {
         return score + (answer === questions[index].correctAnswer ? 1 : 0);
       }, 0);
+      
+      // Save incorrect answers as mistakes
+      const currentTask = tasks.find(t => {
+        const taskDate = new Date(t.scheduled_date);
+        const today = new Date();
+        return taskDate.toDateString() === today.toDateString() && !t.is_completed;
+      });
+      
+      const topic = currentTask?.title || 'Quiz';
+      
+      newAnswers.forEach((answer, index) => {
+        if (answer !== questions[index].correctAnswer) {
+          mistakeStorage.add({
+            type: 'quiz',
+            problem: questions[index].question,
+            topic,
+            userAnswer: answer !== null ? questions[index].options[answer] : 'No answer',
+            correctAnswer: questions[index].options[questions[index].correctAnswer],
+          });
+        }
+      });
+      
       setShowResults(true);
       onComplete(finalScore);
     }

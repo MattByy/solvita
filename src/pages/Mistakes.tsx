@@ -1,37 +1,46 @@
 import { useState, useEffect } from "react";
-import { AlertCircle, TrendingUp, Target } from "lucide-react";
+import { AlertCircle, TrendingUp, Target, XCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Navigation } from "@/components/Navigation";
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-
-interface MistakeRecord {
-  problem: string;
-  attempts: number;
-  date: string;
-  topic: string;
-}
+import { mistakeStorage, MistakeRecord } from "@/lib/mistakeStorage";
 
 const Mistakes = () => {
   const [mistakes, setMistakes] = useState<MistakeRecord[]>([]);
   const [topicStats, setTopicStats] = useState<Record<string, number>>({});
 
-  useEffect(() => {
-    const loadedMistakes = JSON.parse(localStorage.getItem("mathMistakes") || "[]");
+  const loadMistakes = () => {
+    const loadedMistakes = mistakeStorage.getAll();
     setMistakes(loadedMistakes);
 
     // Calculate topic statistics
     const stats: Record<string, number> = {};
-    loadedMistakes.forEach((mistake: MistakeRecord) => {
+    loadedMistakes.forEach((mistake) => {
       stats[mistake.topic] = (stats[mistake.topic] || 0) + 1;
     });
     setTopicStats(stats);
+  };
+
+  useEffect(() => {
+    loadMistakes();
   }, []);
 
+  const handleDeleteMistake = (id: string) => {
+    mistakeStorage.delete(id);
+    loadMistakes();
+  };
+
   const mostChallengingTopic = Object.entries(topicStats).sort((a, b) => b[1] - a[1])[0];
+  
+  const quizMistakes = mistakes.filter(m => m.type === 'quiz');
+  const exerciseMistakes = mistakes.filter(m => m.type === 'exercise');
+  const practiceMistakes = mistakes.filter(m => m.type === 'practice');
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
@@ -124,9 +133,9 @@ const Mistakes = () => {
             </Card>
           )}
 
-          {/* Mistake History */}
+          {/* Mistake History with Tabs */}
           <Card className="p-6">
-            <h2 className="text-xl font-bold mb-4">Recent Mistakes</h2>
+            <h2 className="text-xl font-bold mb-4">Your Mistakes</h2>
             {mistakes.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <AlertCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
@@ -134,28 +143,50 @@ const Mistakes = () => {
                 <p className="text-sm">Keep practicing and you'll see your progress here.</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {mistakes
-                  .slice()
-                  .reverse()
-                  .slice(0, 10)
-                  .map((mistake, index) => (
-                    <Card key={index} className="p-4 bg-accent/5 border-accent">
-                      <div className="flex justify-between items-start mb-2">
-                        <Badge variant="secondary">{mistake.topic}</Badge>
-                        <Badge variant="outline">{mistake.attempts} attempts</Badge>
-                      </div>
-                      <div className="prose prose-sm dark:prose-invert">
-                        <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-                          {mistake.problem}
-                        </ReactMarkdown>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {new Date(mistake.date).toLocaleDateString()}
-                      </p>
-                    </Card>
+              <Tabs defaultValue="all" className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="all">All ({mistakes.length})</TabsTrigger>
+                  <TabsTrigger value="quiz">Quiz ({quizMistakes.length})</TabsTrigger>
+                  <TabsTrigger value="exercise">Exercise ({exerciseMistakes.length})</TabsTrigger>
+                  <TabsTrigger value="practice">Practice ({practiceMistakes.length})</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="all" className="space-y-3 mt-4">
+                  {mistakes.slice().reverse().map((mistake) => (
+                    <MistakeCard key={mistake.id} mistake={mistake} onDelete={handleDeleteMistake} />
                   ))}
-              </div>
+                </TabsContent>
+                
+                <TabsContent value="quiz" className="space-y-3 mt-4">
+                  {quizMistakes.length === 0 ? (
+                    <p className="text-center py-4 text-muted-foreground">No quiz mistakes yet</p>
+                  ) : (
+                    quizMistakes.slice().reverse().map((mistake) => (
+                      <MistakeCard key={mistake.id} mistake={mistake} onDelete={handleDeleteMistake} />
+                    ))
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="exercise" className="space-y-3 mt-4">
+                  {exerciseMistakes.length === 0 ? (
+                    <p className="text-center py-4 text-muted-foreground">No exercise mistakes yet</p>
+                  ) : (
+                    exerciseMistakes.slice().reverse().map((mistake) => (
+                      <MistakeCard key={mistake.id} mistake={mistake} onDelete={handleDeleteMistake} />
+                    ))
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="practice" className="space-y-3 mt-4">
+                  {practiceMistakes.length === 0 ? (
+                    <p className="text-center py-4 text-muted-foreground">No practice mistakes yet</p>
+                  ) : (
+                    practiceMistakes.slice().reverse().map((mistake) => (
+                      <MistakeCard key={mistake.id} mistake={mistake} onDelete={handleDeleteMistake} />
+                    ))
+                  )}
+                </TabsContent>
+              </Tabs>
             )}
           </Card>
 
@@ -185,6 +216,69 @@ const Mistakes = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const MistakeCard = ({ mistake, onDelete }: { mistake: MistakeRecord; onDelete: (id: string) => void }) => {
+  const getBadgeVariant = (type: MistakeRecord['type']) => {
+    switch (type) {
+      case 'quiz': return 'destructive';
+      case 'exercise': return 'default';
+      case 'practice': return 'secondary';
+    }
+  };
+
+  return (
+    <Card className="p-4 bg-accent/5 border-accent">
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex gap-2">
+          <Badge variant={getBadgeVariant(mistake.type)}>{mistake.type}</Badge>
+          <Badge variant="outline">{mistake.topic}</Badge>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={() => onDelete(mistake.id)}
+        >
+          <XCircle className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      <div className="prose prose-sm dark:prose-invert mb-2">
+        <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+          {mistake.problem}
+        </ReactMarkdown>
+      </div>
+
+      {mistake.type === 'quiz' && (
+        <div className="text-sm space-y-1 mt-2 p-2 bg-muted rounded">
+          <p><span className="font-medium">Your answer:</span> {mistake.userAnswer}</p>
+          <p><span className="font-medium text-green-600">Correct:</span> {mistake.correctAnswer}</p>
+        </div>
+      )}
+
+      {mistake.type === 'exercise' && mistake.incorrectSteps && mistake.incorrectSteps.length > 0 && (
+        <div className="text-sm mt-2 p-2 bg-muted rounded">
+          <p className="font-medium mb-1">Struggled with steps:</p>
+          <div className="space-y-1">
+            {mistake.incorrectSteps.map((stepIdx) => (
+              <div key={stepIdx} className="text-xs">
+                Step {stepIdx + 1}: {mistake.stepDetails?.[stepIdx]?.explanation}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {mistake.type === 'practice' && mistake.attempts && (
+        <Badge variant="outline" className="mt-2">{mistake.attempts} attempts</Badge>
+      )}
+
+      <p className="text-xs text-muted-foreground mt-2">
+        {new Date(mistake.date).toLocaleDateString()}
+      </p>
+    </Card>
   );
 };
 
