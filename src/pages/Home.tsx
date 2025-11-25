@@ -259,9 +259,18 @@ const Home = () => {
                             </p>
                           </div>
                         </div>
-                        <Badge variant="outline" className="text-xs shrink-0">
-                          {task.task_type}
-                        </Badge>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge variant="outline" className="text-xs">
+                            {task.task_type}
+                          </Badge>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => navigateToTask(task)}
+                          >
+                            Start
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
