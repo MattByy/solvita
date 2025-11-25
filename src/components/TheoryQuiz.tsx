@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -21,10 +22,10 @@ interface TheoryQuizProps {
   onComplete: (score: number) => void;
   onReadTheory: () => void;
   onRetry: () => void;
-  onStartPractice?: () => void;
 }
 
-export const TheoryQuiz = ({ questions, onComplete, onReadTheory, onRetry, onStartPractice }: TheoryQuizProps) => {
+export const TheoryQuiz = ({ questions, onComplete, onReadTheory, onRetry }: TheoryQuizProps) => {
+  const navigate = useNavigate();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [userAnswers, setUserAnswers] = useState<(number | null)[]>(Array(questions.length).fill(null));
@@ -40,7 +41,8 @@ export const TheoryQuiz = ({ questions, onComplete, onReadTheory, onRetry, onSta
 
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
-      setSelectedAnswer(newAnswers[currentQuestion + 1]);
+      // Always start with no selection on a new question
+      setSelectedAnswer(null);
     } else {
       // Quiz complete - show results
       const finalScore = newAnswers.reduce((score, answer, index) => {
@@ -63,7 +65,7 @@ export const TheoryQuiz = ({ questions, onComplete, onReadTheory, onRetry, onSta
       return total + (answer === questions[index].correctAnswer ? 1 : 0);
     }, 0);
     const mistakes = questions.length - score;
-    const showPracticeButton = mistakes <= 2 && onStartPractice;
+    const showPracticeButton = mistakes <= 2;
 
     return (
       <Card className="w-full">
@@ -143,7 +145,7 @@ export const TheoryQuiz = ({ questions, onComplete, onReadTheory, onRetry, onSta
           
           {showPracticeButton && (
             <div className="mt-4">
-              <Button onClick={onStartPractice} className="w-full" size="lg">
+              <Button onClick={() => navigate("/practice")} className="w-full" size="lg">
                 Start Practice
               </Button>
             </div>
