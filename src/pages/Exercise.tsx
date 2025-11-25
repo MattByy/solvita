@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ChevronRight, Lightbulb, PartyPopper, BookOpen } from "lucide-react";
+import { ArrowLeft, ChevronRight, Lightbulb, PartyPopper, BookOpen, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -358,48 +358,47 @@ const Exercise = () => {
                   <>
                     <Card className="p-4 bg-secondary/10 border-secondary/20 mb-4">
                       <p className="text-sm font-semibold mb-3">Detailed Solution:</p>
+                      <p className="text-xs text-muted-foreground mb-4">Click any steps you got wrong to mark them as mistakes</p>
                       <div className="space-y-3">
-                        {currentProblem.detailedSolution.map((step, idx) => (
-                          <div key={idx} className="space-y-1">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1 prose prose-sm dark:prose-invert">
-                                <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-                                  {step.step}
-                                </ReactMarkdown>
-                              </div>
-                              <ExerciseSolutionQuestion
-                                problemQuestion={currentProblem.question}
-                                stepContent={step.step}
-                                stepExplanation={step.explanation}
-                              />
-                            </div>
-                            <p className="text-xs text-muted-foreground italic">{step.explanation}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </Card>
-
-                    <Card className="p-4 bg-accent/5 border-accent/20 mb-4">
-                      <p className="text-sm font-semibold mb-3">Mark any steps you got wrong:</p>
-                      <div className="space-y-2">
-                        {currentProblem.detailedSolution.map((step, idx) => (
-                          <div key={idx} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`step-${idx}`}
-                              checked={selectedIncorrectSteps.includes(idx)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setSelectedIncorrectSteps([...selectedIncorrectSteps, idx]);
-                                } else {
+                        {currentProblem.detailedSolution.map((step, idx) => {
+                          const isSelected = selectedIncorrectSteps.includes(idx);
+                          return (
+                            <div 
+                              key={idx} 
+                              onClick={() => {
+                                if (isSelected) {
                                   setSelectedIncorrectSteps(selectedIncorrectSteps.filter(i => i !== idx));
+                                } else {
+                                  setSelectedIncorrectSteps([...selectedIncorrectSteps, idx]);
                                 }
                               }}
-                            />
-                            <Label htmlFor={`step-${idx}`} className="text-sm cursor-pointer">
-                              Step {idx + 1}
-                            </Label>
-                          </div>
-                        ))}
+                              className={`p-3 rounded-lg cursor-pointer transition-all border-2 ${
+                                isSelected 
+                                  ? "border-destructive bg-destructive/5" 
+                                  : "border-transparent hover:bg-accent/50"
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-start gap-2 flex-1">
+                                  {isSelected && (
+                                    <XCircle className="h-4 w-4 text-destructive shrink-0 mt-1" />
+                                  )}
+                                  <div className="flex-1 prose prose-sm dark:prose-invert">
+                                    <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                                      {step.step}
+                                    </ReactMarkdown>
+                                  </div>
+                                </div>
+                                <ExerciseSolutionQuestion
+                                  problemQuestion={currentProblem.question}
+                                  stepContent={step.step}
+                                  stepExplanation={step.explanation}
+                                />
+                              </div>
+                              <p className="text-xs text-muted-foreground italic ml-6">{step.explanation}</p>
+                            </div>
+                          );
+                        })}
                       </div>
                     </Card>
 
