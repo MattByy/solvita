@@ -161,16 +161,11 @@ const StepByStep = () => {
             </div>
 
             <Card className="p-6 bg-accent/5 border-accent mb-6">
-              <div className="flex items-center justify-between mb-4">
+              <div className="mb-4">
                 <h3 className="text-xl font-semibold flex items-center gap-2">
                   <ChevronRight className="h-5 w-5 text-primary" />
                   {currentLesson.steps[currentStep].title}
                 </h3>
-                <StepQuestionDialog
-                  stepContent={currentLesson.steps[currentStep].title}
-                  stepExplanation={currentLesson.steps[currentStep].explanation}
-                  topic={selectedTopic}
-                />
               </div>
 
               <div className="prose prose-sm max-w-none dark:prose-invert mb-4">
@@ -181,7 +176,15 @@ const StepByStep = () => {
 
               {currentLesson.steps[currentStep].example && (
                 <Card className="p-4 bg-primary/5 border-primary/20 mb-4">
-                  <p className="text-sm font-semibold text-primary mb-2">Example:</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-semibold text-primary">Example:</p>
+                    <StepQuestionDialog
+                      stepContent={currentLesson.steps[currentStep].title}
+                      stepExplanation={currentLesson.steps[currentStep].explanation}
+                      stepExample={currentLesson.steps[currentStep].example}
+                      topic={selectedTopic}
+                    />
+                  </div>
                   <div className="prose prose-sm dark:prose-invert">
                     <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
                       {currentLesson.steps[currentStep].example}

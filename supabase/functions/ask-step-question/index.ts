@@ -11,22 +11,24 @@ serve(async (req) => {
   }
 
   try {
-    const { stepContent, stepExplanation, userQuestion, topic } = await req.json();
+    const { stepContent, stepExplanation, stepExample, userQuestion, topic } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    const exampleContext = stepExample ? `\n\nThe example provided is: ${stepExample}` : '';
+
     const systemPrompt = `You are a helpful math tutor assistant. A student is working through a step-by-step problem solution and has a question about a specific step. 
 
 The topic is: ${topic}
 The step shows: ${stepContent}
-The explanation provided was: ${stepExplanation}
+The explanation provided was: ${stepExplanation}${exampleContext}
 
 The student's question is: ${userQuestion}
 
-Provide a clear, encouraging answer that helps them understand the concept better. Be patient and break down complex ideas. If they're confused about the step, explain it in a different way or provide an additional example.`;
+Provide a clear, encouraging answer that helps them understand the concept better. Use proper mathematical notation with LaTeX format for equations (wrap inline math in $ symbols and display math in $$ symbols). Be patient and break down complex ideas. If they're confused about the step, explain it in a different way or provide an additional example.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

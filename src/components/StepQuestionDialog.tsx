@@ -1,25 +1,31 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { MessageCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 
 interface StepQuestionDialogProps {
   stepContent: string;
   stepExplanation: string;
+  stepExample?: string;
   topic: string;
 }
 
 export const StepQuestionDialog = ({
   stepContent,
   stepExplanation,
+  stepExample,
   topic,
 }: StepQuestionDialogProps) => {
   const [open, setOpen] = useState(false);
@@ -52,6 +58,7 @@ export const StepQuestionDialog = ({
           body: JSON.stringify({
             stepContent,
             stepExplanation,
+            stepExample,
             userQuestion: question,
             topic,
           }),
@@ -117,26 +124,43 @@ export const StepQuestionDialog = ({
         variant="outline"
         size="sm"
         onClick={() => setOpen(true)}
-        className="ml-2"
       >
         <MessageCircle className="w-4 h-4 mr-1" />
         Ask AI
       </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Ask About This Step</DialogTitle>
-            <DialogDescription>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Ask About This Step</SheetTitle>
+            <SheetDescription>
               Have a question about this step? Ask the AI tutor for help!
-            </DialogDescription>
-          </DialogHeader>
+            </SheetDescription>
+          </SheetHeader>
 
-          <div className="space-y-4 mt-4">
+          <div className="space-y-4 mt-6">
             <div className="p-4 bg-secondary/30 rounded-lg">
               <p className="text-sm font-medium mb-2">Step:</p>
-              <p className="text-sm">{stepContent}</p>
-              <p className="text-sm text-muted-foreground mt-2">{stepExplanation}</p>
+              <div className="prose prose-sm dark:prose-invert">
+                <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                  {stepContent}
+                </ReactMarkdown>
+              </div>
+              <div className="prose prose-sm dark:prose-invert text-muted-foreground mt-2">
+                <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                  {stepExplanation}
+                </ReactMarkdown>
+              </div>
+              {stepExample && (
+                <div className="mt-3 pt-3 border-t border-border">
+                  <p className="text-sm font-medium mb-1">Example:</p>
+                  <div className="prose prose-sm dark:prose-invert">
+                    <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                      {stepExample}
+                    </ReactMarkdown>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>
@@ -163,12 +187,16 @@ export const StepQuestionDialog = ({
             {answer && (
               <div className="mt-4 p-4 bg-primary/5 rounded-lg border border-primary/20">
                 <p className="text-sm font-medium mb-2">AI Tutor's Answer:</p>
-                <div className="text-sm whitespace-pre-wrap">{answer}</div>
+                <div className="prose prose-sm dark:prose-invert max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                    {answer}
+                  </ReactMarkdown>
+                </div>
               </div>
             )}
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </>
   );
 };
