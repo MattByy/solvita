@@ -41,7 +41,7 @@ const Home = () => {
   console.log('Home: Render state', { plan: !!plan, showOnboarding, tasksCount: tasks.length });
 
   if (!plan || showOnboarding) {
-    return <OnboardingModal open={showOnboarding} onComplete={handleOnboardingComplete} />;
+    return <OnboardingModal open={showOnboarding || !plan} onComplete={handleOnboardingComplete} />;
   }
 
   // Calculate progress
