@@ -17,7 +17,7 @@ interface OnboardingModalProps {
 
 export const OnboardingModal = ({ open, onComplete }: OnboardingModalProps) => {
   const [step, setStep] = useState(1);
-  const [selectedGrade, setSelectedGrade] = useState("");
+  const [selectedGrade, setSelectedGrade] = useState("9");
   const [selectedTopicId, setSelectedTopicId] = useState("");
   const [testDate, setTestDate] = useState<Date>();
   const [isGenerating, setIsGenerating] = useState(false);

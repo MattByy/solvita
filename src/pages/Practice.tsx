@@ -40,6 +40,77 @@ const Practice = () => {
 
   function generateProblem(topicId: string, level: string): Problem {
     const problems: Record<string, Problem[]> = {
+      "9-polynomials": [
+        {
+          id: "poly-p1",
+          question: "What is the degree of the polynomial $7x^4 - 3x^2 + 2x - 9$?",
+          answer: "4",
+          hint: "The degree is the highest exponent on the variable.",
+          detailedSolution: [
+            { step: "$7x^4 - 3x^2 + 2x - 9$", explanation: "Look at each term in the polynomial" },
+            { step: "Exponents: 4, 2, 1, 0", explanation: "The exponents are 4 (from $x^4$), 2 (from $x^2$), 1 (from $x$), and 0 (constant)" },
+            { step: "Highest exponent: 4", explanation: "The degree is the highest exponent, which is 4" },
+          ],
+        },
+        {
+          id: "poly-p2",
+          question: "Simplify: $(4x^2 + 2x - 1) + (3x^2 - 5x + 4)$",
+          answer: "7x^2 - 3x + 3",
+          hint: "Combine like terms with matching powers of x.",
+          detailedSolution: [
+            { step: "$(4x^2 + 2x - 1) + (3x^2 - 5x + 4)$", explanation: "Remove parentheses since we're adding" },
+            { step: "$4x^2 + 3x^2 + 2x - 5x - 1 + 4$", explanation: "Group terms by degree" },
+            { step: "$7x^2 - 3x + 3$", explanation: "Add coefficients: $4+3=7$, $2-5=-3$, $-1+4=3$" },
+          ],
+        },
+        {
+          id: "poly-p3",
+          question: "Subtract: $(6x^3 + x^2 - 2) - (2x^3 - 3x^2 + 5)$",
+          answer: "4x^3 + 4x^2 - 7",
+          hint: "Distribute the negative sign to all terms in the second polynomial.",
+          detailedSolution: [
+            { step: "$(6x^3 + x^2 - 2) - (2x^3 - 3x^2 + 5)$", explanation: "Original subtraction problem" },
+            { step: "$6x^3 + x^2 - 2 - 2x^3 + 3x^2 - 5$", explanation: "Distribute negative: change signs of all terms in second polynomial" },
+            { step: "$(6x^3 - 2x^3) + (x^2 + 3x^2) + (-2 - 5)$", explanation: "Group like terms" },
+            { step: "$4x^3 + 4x^2 - 7$", explanation: "Combine: $6-2=4$, $1+3=4$, $-2-5=-7$" },
+          ],
+        },
+        {
+          id: "poly-p4",
+          question: "Expand: $(x + 5)(x - 2)$",
+          answer: "x^2 + 3x - 10",
+          hint: "Use FOIL method or distributive property.",
+          detailedSolution: [
+            { step: "$(x + 5)(x - 2)$", explanation: "Multiply two binomials" },
+            { step: "$x \\cdot x + x \\cdot (-2) + 5 \\cdot x + 5 \\cdot (-2)$", explanation: "FOIL: First, Outer, Inner, Last" },
+            { step: "$x^2 - 2x + 5x - 10$", explanation: "Perform multiplications" },
+            { step: "$x^2 + 3x - 10$", explanation: "Combine like terms: $-2x + 5x = 3x$" },
+          ],
+        },
+        {
+          id: "poly-p5",
+          question: "Calculate $(x + 6)^2$",
+          answer: "x^2 + 12x + 36",
+          hint: "Use the formula $(a + b)^2 = a^2 + 2ab + b^2$",
+          detailedSolution: [
+            { step: "$(x + 6)^2$", explanation: "Square of a binomial" },
+            { step: "$(a + b)^2 = a^2 + 2ab + b^2$ where $a=x, b=6$", explanation: "Apply special product formula" },
+            { step: "$x^2 + 2(x)(6) + 6^2$", explanation: "Substitute and calculate each part" },
+            { step: "$x^2 + 12x + 36$", explanation: "Simplify: $2 \\cdot 6 = 12$, $6^2 = 36$" },
+          ],
+        },
+        {
+          id: "poly-p6",
+          question: "Multiply: $3x(2x^2 - 5x + 1)$",
+          answer: "6x^3 - 15x^2 + 3x",
+          hint: "Distribute 3x to each term.",
+          detailedSolution: [
+            { step: "$3x(2x^2 - 5x + 1)$", explanation: "Monomial times polynomial" },
+            { step: "$3x \\cdot 2x^2 + 3x \\cdot (-5x) + 3x \\cdot 1$", explanation: "Distribute $3x$ to each term" },
+            { step: "$6x^3 - 15x^2 + 3x$", explanation: "Multiply: $3 \\cdot 2 = 6$ with $x \\cdot x^2 = x^3$, etc." },
+          ],
+        },
+      ],
       "9-quadratics": [
         {
           id: "q1",
@@ -89,34 +160,54 @@ const Practice = () => {
             },
           ],
         },
-      ],
-      "12-derivatives": [
         {
-          id: "d1",
-          question: "Find the derivative: $f(x) = 3x^4 - 2x^2 + 5$",
-          answer: "12x^3-4x",
-          hint: "Apply the power rule to each term separately",
+          id: "q3",
+          question: "Factor: $x^2 + 8x + 15$",
+          answer: "(x + 3)(x + 5)",
+          hint: "Find two numbers that multiply to 15 and add to 8.",
           detailedSolution: [
-            {
-              step: "$f(x) = 3x^4 - 2x^2 + 5$",
-              explanation: "We begin with our function. We'll differentiate each term one at a time using the power rule.",
-            },
-            {
-              step: "$\\frac{d}{dx}[3x^4] = 3 \\cdot 4x^{4-1} = 12x^3$",
-              explanation: "For the first term, we use the power rule: multiply by the exponent (4) and reduce the exponent by 1. The coefficient 3 stays in front.",
-            },
-            {
-              step: "$\\frac{d}{dx}[-2x^2] = -2 \\cdot 2x^{2-1} = -4x$",
-              explanation: "For the second term, we again use the power rule: multiply by 2 and reduce the exponent to 1. Don't forget to keep the negative sign!",
-            },
-            {
-              step: "$\\frac{d}{dx}[5] = 0$",
-              explanation: "Constants have a derivative of zero because they don't change - their rate of change is zero.",
-            },
-            {
-              step: "$f'(x) = 12x^3 - 4x$",
-              explanation: "We combine all our individual derivatives using the sum rule. This is our final answer - the derivative of the original function.",
-            },
+            { step: "$x^2 + 8x + 15$", explanation: "Quadratic expression to factor" },
+            { step: "Find factors of 15 that add to 8: 3 and 5", explanation: "Need two numbers with product 15 and sum 8" },
+            { step: "$(x + 3)(x + 5)$", explanation: "Write as product of two binomials using those numbers" },
+            { step: "Check: $(x+3)(x+5) = x^2 + 5x + 3x + 15 = x^2 + 8x + 15$ ✓", explanation: "Verify by expanding" },
+          ],
+        },
+        {
+          id: "q4",
+          question: "Solve: $x^2 = 9$",
+          answer: "3,-3",
+          hint: "Take the square root of both sides (don't forget ±).",
+          detailedSolution: [
+            { step: "$x^2 = 9$", explanation: "Simple quadratic equation" },
+            { step: "$x = \\pm \\sqrt{9}$", explanation: "Take square root of both sides. The ± is crucial!" },
+            { step: "$x = \\pm 3$", explanation: "Square root of 9 is 3" },
+            { step: "$x = 3$ or $x = -3$", explanation: "Two solutions because both $3^2 = 9$ and $(-3)^2 = 9$" },
+          ],
+        },
+        {
+          id: "q5",
+          question: "Find the discriminant of $x^2 - 6x + 9 = 0$ and describe the solutions",
+          answer: "0",
+          hint: "Calculate $b^2 - 4ac$. What does it tell you?",
+          detailedSolution: [
+            { step: "Identify: $a=1, b=-6, c=9$", explanation: "Coefficients from standard form" },
+            { step: "$\\Delta = b^2 - 4ac = (-6)^2 - 4(1)(9)$", explanation: "Substitute into discriminant formula" },
+            { step: "$\\Delta = 36 - 36 = 0$", explanation: "Calculate: $36 - 36 = 0$" },
+            { step: "One repeated real solution", explanation: "When discriminant is 0, there is exactly one solution (repeated root)" },
+          ],
+        },
+        {
+          id: "q6",
+          question: "Solve by completing the square: $x^2 + 4x - 5 = 0$",
+          answer: "1,-5",
+          hint: "Move constant to right side, then add $(\\frac{4}{2})^2$ to both sides.",
+          detailedSolution: [
+            { step: "$x^2 + 4x - 5 = 0$", explanation: "Original equation" },
+            { step: "$x^2 + 4x = 5$", explanation: "Move constant to right side" },
+            { step: "$x^2 + 4x + 4 = 5 + 4$", explanation: "Add $(\\frac{b}{2})^2 = (\\frac{4}{2})^2 = 4$ to both sides" },
+            { step: "$(x + 2)^2 = 9$", explanation: "Left side is perfect square: $(x + 2)^2$" },
+            { step: "$x + 2 = \\pm 3$", explanation: "Take square root: $\\sqrt{9} = 3$" },
+            { step: "$x = -2 + 3 = 1$ or $x = -2 - 3 = -5$", explanation: "Solve: subtract 2 from both results" },
           ],
         },
       ],

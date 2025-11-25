@@ -41,6 +41,73 @@ interface Lesson {
 }
 
 const lessons: Record<string, Lesson> = {
+  "9-polynomials": {
+    topicId: "9-polynomials",
+    title: "Polynomials",
+    introduction: "A polynomial is an expression with variables and coefficients. Let's master polynomial operations step by step.",
+    steps: [
+      {
+        title: "Understanding Polynomials",
+        explanation: "A polynomial is an expression made up of variables and coefficients, combined using addition, subtraction, and multiplication. The variable can have whole number exponents like $x^2$ or $x^3$, but never negative or fractional exponents. Each part of a polynomial is called a term. For example, in $3x^2 + 2x - 5$, there are three terms: $3x^2$, $2x$, and $-5$. The degree of a polynomial is the highest exponent on the variable.",
+        example: "$5x^3 - 2x^2 + x - 8$ is a polynomial of degree 3 because the highest power of $x$ is 3. The term $5x^3$ is called the leading term, and 5 is the leading coefficient.",
+        tip: "The degree tells you the highest power - it determines the polynomial's behavior!",
+        quizQuestion: {
+          question: "What is the degree of the polynomial $4x^5 - 3x^2 + 7$?",
+          options: ["2", "3", "4", "5"],
+          correctAnswer: 3,
+          explanation: "The degree is the highest exponent on the variable. Here, $x^5$ has the highest exponent, which is 5."
+        }
+      },
+      {
+        title: "Identifying Terms and Coefficients",
+        explanation: "Every polynomial is made up of terms. A term consists of a coefficient (the number) and a variable part (like $x^2$). Terms are separated by addition or subtraction signs. The coefficient is the number multiplied by the variable. For example, in $-7x^3$, the coefficient is $-7$. A term without a variable, like $8$, is called a constant term. The leading coefficient is the coefficient of the term with the highest degree.",
+        example: "In $6x^4 - 2x^3 + 5x - 9$: The terms are $6x^4$, $-2x^3$, $5x$, and $-9$. The leading coefficient is 6. The constant term is $-9$.",
+        tip: "Don't forget the sign in front of each term - it's part of the coefficient!",
+        quizQuestion: {
+          question: "In the polynomial $-3x^3 + 8x^2 - x + 12$, what is the leading coefficient?",
+          options: ["8", "-3", "12", "3"],
+          correctAnswer: 1,
+          explanation: "The leading coefficient is the coefficient of the term with the highest degree. The term $-3x^3$ has the highest degree (3), so the leading coefficient is $-3$."
+        }
+      },
+      {
+        title: "Adding and Subtracting Polynomials",
+        explanation: "When adding or subtracting polynomials, we combine like terms. Like terms have the same variable raised to the same power. For example, $3x^2$ and $-5x^2$ are like terms, but $3x^2$ and $3x$ are not. To combine like terms, we add or subtract their coefficients while keeping the variable part the same. When subtracting polynomials, distribute the negative sign to every term in the second polynomial.",
+        example: "$(4x^2 + 3x - 2) + (2x^2 - x + 5) = (4x^2 + 2x^2) + (3x - x) + (-2 + 5) = 6x^2 + 2x + 3$",
+        tip: "Line up like terms vertically to make combining them easier!",
+        quizQuestion: {
+          question: "What is $(5x^2 + 2x) - (3x^2 - 4x)$?",
+          options: ["$2x^2 + 6x$", "$2x^2 - 2x$", "$8x^2 + 6x$", "$8x^2 - 2x$"],
+          correctAnswer: 0,
+          explanation: "First distribute the negative: $(5x^2 + 2x) + (-3x^2 + 4x)$. Then combine like terms: $(5x^2 - 3x^2) + (2x + 4x) = 2x^2 + 6x$."
+        }
+      },
+      {
+        title: "Multiplying Polynomials",
+        explanation: "To multiply polynomials, we use the distributive property. Each term in the first polynomial must be multiplied by each term in the second polynomial. When multiplying terms, multiply the coefficients and add the exponents of like variables. This is often called the FOIL method for binomials (First, Outer, Inner, Last), but it applies to all polynomial multiplication.",
+        example: "$(x + 3)(2x - 1)$: First: $x \\cdot 2x = 2x^2$. Outer: $x \\cdot (-1) = -x$. Inner: $3 \\cdot 2x = 6x$. Last: $3 \\cdot (-1) = -3$. Combined: $2x^2 - x + 6x - 3 = 2x^2 + 5x - 3$",
+        tip: "Don't forget to combine like terms after multiplying!",
+        quizQuestion: {
+          question: "What is $(x + 2)(x + 4)$?",
+          options: ["$x^2 + 6x + 8$", "$x^2 + 8x + 6$", "$x^2 + 4x + 8$", "$x^2 + 2x + 8$"],
+          correctAnswer: 0,
+          explanation: "Using FOIL: First ($x \\cdot x = x^2$), Outer ($x \\cdot 4 = 4x$), Inner ($2 \\cdot x = 2x$), Last ($2 \\cdot 4 = 8$). Combined: $x^2 + 4x + 2x + 8 = x^2 + 6x + 8$."
+        }
+      },
+      {
+        title: "Special Polynomial Products",
+        explanation: "Certain polynomial products follow predictable patterns that are useful to memorize. The square of a binomial: $(a + b)^2 = a^2 + 2ab + b^2$ and $(a - b)^2 = a^2 - 2ab + b^2$. The difference of squares: $(a + b)(a - b) = a^2 - b^2$. These patterns appear frequently and recognizing them saves time and reduces errors.",
+        example: "$(x + 5)^2 = x^2 + 2(x)(5) + 5^2 = x^2 + 10x + 25$. Also, $(x + 3)(x - 3) = x^2 - 9$ using difference of squares.",
+        tip: "Recognizing these patterns makes factoring much easier later!",
+        quizQuestion: {
+          question: "Using special products, what is $(x - 4)^2$?",
+          options: ["$x^2 - 16$", "$x^2 - 8x + 16$", "$x^2 + 8x + 16$", "$x^2 - 4x + 16$"],
+          correctAnswer: 1,
+          explanation: "Using the pattern $(a - b)^2 = a^2 - 2ab + b^2$: $(x - 4)^2 = x^2 - 2(x)(4) + 4^2 = x^2 - 8x + 16$."
+        }
+      },
+    ],
+  },
   "9-quadratics": {
     topicId: "9-quadratics",
     title: "Quadratic Equations",
