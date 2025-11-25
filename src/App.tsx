@@ -7,6 +7,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Home from "./pages/Home";
 import StepByStep from "./pages/StepByStep";
 import Practice from "./pages/Practice";
+import Exercise from "./pages/Exercise";
 import VideoLibrary from "./pages/VideoLibrary";
 import Mistakes from "./pages/Mistakes";
 import LearningPlan from "./pages/LearningPlan";
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/" element={<Home />} />
             <Route path="/learn" element={<StepByStep />} />
             <Route path="/practice" element={<Practice />} />
+            <Route path="/exercice" element={<Exercise />} />
             <Route path="/video-library" element={<VideoLibrary />} />
             <Route path="/mistakes" element={<Mistakes />} />
             <Route path="/learning-plan" element={<LearningPlan />} />

@@ -96,11 +96,11 @@ export const TheoryQuiz = ({ questions, onComplete, onReadTheory, onRetry }: The
             </Button>
             {showPracticeButton && (
               <Button 
-                onClick={() => navigate("/learn")}
+                onClick={() => navigate("/exercice")}
                 size="sm"
                 className="rounded-full hover:scale-105 transition-transform bg-primary"
               >
-                Start Practice
+                Start Exercise
               </Button>
             )}
           </div>
