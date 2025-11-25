@@ -136,7 +136,7 @@ const Practice = () => {
       setIsCorrect(true);
       setCorrectCount(correctCount + 1);
       toast({
-        title: "Correct! 🎉",
+        title: "Correct!",
         description: "Excellent work! You got it right.",
       });
 
@@ -171,28 +171,21 @@ const Practice = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Target className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Practice Mode</h1>
-                <p className="text-sm text-muted-foreground">
-                  Score: {correctCount}/{correctCount + (isCorrect === false ? 1 : 0)}
-                </p>
-              </div>
+    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="flex flex-col gap-6">
+          <Navigation />
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold">Practice Mode</h1>
+              <p className="text-muted-foreground">
+                Score: {correctCount}/{correctCount + (isCorrect === false ? 1 : 0)}
+              </p>
             </div>
             <DifficultySelector value={difficulty} onChange={setDifficulty} />
           </div>
-          <Navigation />
-        </div>
-      </header>
 
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
         <div className="space-y-6">
           <GradeTopicSelector
             selectedGrade={selectedGrade}
@@ -301,6 +294,7 @@ const Practice = () => {
               )}
             </div>
           </Card>
+        </div>
         </div>
       </div>
     </div>

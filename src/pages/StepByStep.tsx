@@ -241,25 +241,16 @@ const StepByStep = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <BookOpen className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">MathTutor AI</h1>
-                <p className="text-sm text-muted-foreground">Step-by-step learning</p>
-              </div>
-            </div>
-          </div>
-          <Navigation />
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
       <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="flex flex-col gap-6">
+          <Navigation />
+          
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold">Step-by-Step Learning</h1>
+            <p className="text-muted-foreground">Master concepts one step at a time</p>
+          </div>
+
         <div className="space-y-6">
           <GradeTopicSelector
             selectedGrade={selectedGrade}
@@ -333,7 +324,7 @@ const StepByStep = () => {
 
                   {currentLesson.steps[currentStep].tip && (
                     <Card className="p-4 bg-secondary/10 border-secondary/20">
-                      <p className="text-sm font-semibold mb-1">💡 Pro Tip:</p>
+                      <p className="text-sm font-semibold mb-1">Pro Tip</p>
                       <p className="text-sm">{currentLesson.steps[currentStep].tip}</p>
                     </Card>
                   )}
@@ -369,6 +360,7 @@ const StepByStep = () => {
               />
             )}
           </Card>
+        </div>
         </div>
       </div>
     </div>
