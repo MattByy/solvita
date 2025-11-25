@@ -366,7 +366,6 @@ const StepByStep = () => {
                 onComplete={handleQuizComplete}
                 onReadTheory={handleReadTheory}
                 onRetry={handleRetryQuiz}
-                onStartPractice={handleStartPractice}
               />
             )}
           </Card>
