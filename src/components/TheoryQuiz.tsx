@@ -3,8 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { CheckCircle2, XCircle } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 
 interface QuizQuestion {
   question: string;
@@ -21,38 +24,114 @@ interface TheoryQuizProps {
 export const TheoryQuiz = ({ questions, onComplete }: TheoryQuizProps) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [isAnswered, setIsAnswered] = useState(false);
-  const [score, setScore] = useState(0);
-
-  const handleSubmitAnswer = () => {
-    if (selectedAnswer === null) {
-      toast.error("Please select an answer");
-      return;
-    }
-
-    setIsAnswered(true);
-    const isCorrect = selectedAnswer === questions[currentQuestion].correctAnswer;
-    
-    if (isCorrect) {
-      setScore(score + 1);
-      toast.success("Correct!");
-    } else {
-      toast.error("Incorrect");
-    }
-  };
+  const [userAnswers, setUserAnswers] = useState<(number | null)[]>(Array(questions.length).fill(null));
+  const [showResults, setShowResults] = useState(false);
 
   const handleNextQuestion = () => {
+    if (selectedAnswer === null) return;
+    
+    // Save the answer
+    const newAnswers = [...userAnswers];
+    newAnswers[currentQuestion] = selectedAnswer;
+    setUserAnswers(newAnswers);
+
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
-      setSelectedAnswer(null);
-      setIsAnswered(false);
+      setSelectedAnswer(userAnswers[currentQuestion + 1]);
     } else {
-      onComplete(score + (selectedAnswer === questions[currentQuestion].correctAnswer ? 1 : 0));
+      // Quiz complete - show results
+      const finalScore = newAnswers.reduce((score, answer, index) => {
+        return score + (answer === questions[index].correctAnswer ? 1 : 0);
+      }, 0);
+      setShowResults(true);
+      onComplete(finalScore);
     }
   };
 
+  const handlePreviousQuestion = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1);
+      setSelectedAnswer(userAnswers[currentQuestion - 1]);
+    }
+  };
+
+  if (showResults) {
+    const score = userAnswers.reduce((total, answer, index) => {
+      return total + (answer === questions[index].correctAnswer ? 1 : 0);
+    }, 0);
+
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Quiz Results</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="text-center p-6 bg-secondary/20 rounded-lg">
+            <p className="text-3xl font-bold mb-2">
+              {score}/{questions.length}
+            </p>
+            <p className="text-muted-foreground">
+              {Math.round((score / questions.length) * 100)}% correct
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            {questions.map((q, index) => {
+              const userAnswer = userAnswers[index];
+              const isCorrect = userAnswer === q.correctAnswer;
+
+              return (
+                <Card key={index} className={`p-4 ${isCorrect ? 'border-green-500/50' : 'border-destructive/50'}`}>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2">
+                      {isCorrect ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-600 mt-1 flex-shrink-0" />
+                      ) : (
+                        <XCircle className="h-5 w-5 text-destructive mt-1 flex-shrink-0" />
+                      )}
+                      <div className="flex-1">
+                        <p className="font-medium mb-2">Question {index + 1}:</p>
+                        <div className="prose prose-sm dark:prose-invert mb-3">
+                          <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                            {q.question}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="ml-7 space-y-2">
+                      <div className="text-sm">
+                        <span className="font-medium">Your answer: </span>
+                        <span className={!isCorrect ? 'text-destructive' : ''}>
+                          {userAnswer !== null ? q.options[userAnswer] : 'Not answered'}
+                        </span>
+                      </div>
+                      {!isCorrect && (
+                        <div className="text-sm">
+                          <span className="font-medium text-green-600">Correct answer: </span>
+                          <span>{q.options[q.correctAnswer]}</span>
+                        </div>
+                      )}
+                      <div className="p-3 bg-muted rounded-lg text-sm">
+                        <p className="font-medium mb-1">Explanation:</p>
+                        <div className="prose prose-sm dark:prose-invert">
+                          <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                            {q.explanation}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const currentQ = questions[currentQuestion];
-  const isCorrect = selectedAnswer === currentQ.correctAnswer;
 
   return (
     <Card className="w-full">
@@ -70,59 +149,34 @@ export const TheoryQuiz = ({ questions, onComplete }: TheoryQuizProps) => {
         <RadioGroup
           value={selectedAnswer?.toString()}
           onValueChange={(value) => setSelectedAnswer(parseInt(value))}
-          disabled={isAnswered}
         >
           {currentQ.options.map((option, index) => (
             <div key={index} className="flex items-center space-x-2">
               <RadioGroupItem value={index.toString()} id={`option-${index}`} />
-              <Label
-                htmlFor={`option-${index}`}
-                className={`flex-1 cursor-pointer ${
-                  isAnswered
-                    ? index === currentQ.correctAnswer
-                      ? "text-green-600"
-                      : index === selectedAnswer
-                      ? "text-destructive"
-                      : ""
-                    : ""
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  {option}
-                  {isAnswered && index === currentQ.correctAnswer && (
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  )}
-                  {isAnswered && index === selectedAnswer && index !== currentQ.correctAnswer && (
-                    <XCircle className="h-4 w-4 text-destructive" />
-                  )}
+              <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
+                <div className="prose prose-sm dark:prose-invert">
+                  <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                    {option}
+                  </ReactMarkdown>
                 </div>
               </Label>
             </div>
           ))}
         </RadioGroup>
 
-        {isAnswered && (
-          <div className="p-4 bg-muted rounded-lg">
-            <p className="font-medium mb-2">
-              {isCorrect ? "✓ Correct!" : "✗ Incorrect"}
-            </p>
-            <p className="text-sm text-muted-foreground">{currentQ.explanation}</p>
-          </div>
-        )}
-
         <div className="flex justify-between items-center pt-4">
-          <div className="text-sm text-muted-foreground">
-            Score: {score}/{questions.length}
-          </div>
           <Button
-            onClick={isAnswered ? handleNextQuestion : handleSubmitAnswer}
-            disabled={!isAnswered && selectedAnswer === null}
+            variant="outline"
+            onClick={handlePreviousQuestion}
+            disabled={currentQuestion === 0}
           >
-            {isAnswered
-              ? currentQuestion < questions.length - 1
-                ? "Next Question"
-                : "Finish Quiz"
-              : "Submit Answer"}
+            Previous
+          </Button>
+          <Button
+            onClick={handleNextQuestion}
+            disabled={selectedAnswer === null}
+          >
+            {currentQuestion < questions.length - 1 ? "Next Question" : "Submit Quiz"}
           </Button>
         </div>
       </CardContent>
