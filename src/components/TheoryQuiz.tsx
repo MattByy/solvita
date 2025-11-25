@@ -78,22 +78,32 @@ export const TheoryQuiz = ({ questions, onComplete, onReadTheory, onRetry }: The
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex gap-3 justify-center">
-            <Button variant="outline" onClick={onReadTheory} className="flex-1">
+          <div className="flex gap-3 justify-center flex-wrap">
+            <Button 
+              variant="outline" 
+              onClick={onReadTheory} 
+              size="sm"
+              className="rounded-full hover:scale-105 transition-transform"
+            >
               Read Theory Again
             </Button>
-            <Button onClick={onRetry} className="flex-1">
+            <Button 
+              onClick={onRetry}
+              size="sm"
+              className="rounded-full hover:scale-105 transition-transform"
+            >
               Retry Quiz
             </Button>
-          </div>
-          
-          {showPracticeButton && (
-            <div>
-              <Button onClick={() => navigate("/practice")} className="w-full" size="lg">
+            {showPracticeButton && (
+              <Button 
+                onClick={() => navigate("/learn")}
+                size="sm"
+                className="rounded-full hover:scale-105 transition-transform bg-primary"
+              >
                 Start Practice
               </Button>
-            </div>
-          )}
+            )}
+          </div>
 
           <div className="space-y-6">
             {questions.map((q, index) => {
