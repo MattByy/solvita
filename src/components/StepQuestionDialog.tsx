@@ -8,12 +8,17 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageCircle, Loader2 } from "lucide-react";
+import { MessageCircle, Loader2, Send } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
 
 interface StepQuestionDialogProps {
   stepContent: string;
@@ -30,7 +35,7 @@ export const StepQuestionDialog = ({
 }: StepQuestionDialogProps) => {
   const [open, setOpen] = useState(false);
   const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -43,8 +48,10 @@ export const StepQuestionDialog = ({
       return;
     }
 
+    const userMessage: Message = { role: "user", content: question };
+    setMessages((prev) => [...prev, userMessage]);
+    setQuestion("");
     setIsLoading(true);
-    setAnswer("");
 
     try {
       const response = await fetch(
@@ -61,6 +68,7 @@ export const StepQuestionDialog = ({
             stepExample,
             userQuestion: question,
             topic,
+            conversationHistory: messages,
           }),
         }
       );
@@ -73,6 +81,7 @@ export const StepQuestionDialog = ({
       const decoder = new TextDecoder();
       let textBuffer = "";
       let streamDone = false;
+      let aiResponse = "";
 
       while (!streamDone) {
         const { done, value } = await reader.read();
@@ -98,7 +107,14 @@ export const StepQuestionDialog = ({
             const parsed = JSON.parse(jsonStr);
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
             if (content) {
-              setAnswer((prev) => prev + content);
+              aiResponse += content;
+              setMessages((prev) => {
+                const lastMessage = prev[prev.length - 1];
+                if (lastMessage?.role === "assistant") {
+                  return [...prev.slice(0, -1), { role: "assistant", content: aiResponse }];
+                }
+                return [...prev, { role: "assistant", content: aiResponse }];
+              });
             }
           } catch {
             textBuffer = line + "\n" + textBuffer;
@@ -130,25 +146,22 @@ export const StepQuestionDialog = ({
       </Button>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>Ask About This Step</SheetTitle>
-            <SheetDescription>
-              Have a question about this step? Ask the AI tutor for help!
-            </SheetDescription>
-          </SheetHeader>
+        <SheetContent side="right" className="w-full sm:max-w-xl flex flex-col h-full p-0">
+          <div className="p-6 border-b border-border">
+            <SheetHeader>
+              <SheetTitle>Ask About This Step</SheetTitle>
+              <SheetDescription>
+                Have a question about this step? Ask the AI tutor for help!
+              </SheetDescription>
+            </SheetHeader>
+          </div>
 
-          <div className="space-y-4 mt-6">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
             <div className="p-4 bg-secondary/30 rounded-lg">
-              <p className="text-sm font-medium mb-2">Step:</p>
+              <p className="text-sm font-medium mb-2">Step Context:</p>
               <div className="prose prose-sm dark:prose-invert">
                 <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
                   {stepContent}
-                </ReactMarkdown>
-              </div>
-              <div className="prose prose-sm dark:prose-invert text-muted-foreground mt-2">
-                <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-                  {stepExplanation}
                 </ReactMarkdown>
               </div>
               {stepExample && (
@@ -163,37 +176,62 @@ export const StepQuestionDialog = ({
               )}
             </div>
 
-            <div>
-              <label className="text-sm font-medium mb-2 block">Your Question:</label>
-              <Textarea
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                placeholder="E.g., Why did we multiply by 2 here? Could we solve this a different way?"
-                className="min-h-[100px]"
-              />
-            </div>
-
-            <Button onClick={askQuestion} disabled={isLoading} className="w-full">
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Getting Answer...
-                </>
-              ) : (
-                "Ask Question"
-              )}
-            </Button>
-
-            {answer && (
-              <div className="mt-4 p-4 bg-primary/5 rounded-lg border border-primary/20">
-                <p className="text-sm font-medium mb-2">AI Tutor's Answer:</p>
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={`p-4 rounded-lg ${
+                  message.role === "user"
+                    ? "bg-primary/10 ml-8"
+                    : "bg-secondary/20 mr-8"
+                }`}
+              >
+                <p className="text-xs font-semibold mb-2 text-muted-foreground">
+                  {message.role === "user" ? "You" : "AI Tutor"}
+                </p>
                 <div className="prose prose-sm dark:prose-invert max-w-none">
                   <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-                    {answer}
+                    {message.content}
                   </ReactMarkdown>
                 </div>
               </div>
+            ))}
+
+            {isLoading && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="text-sm">AI Tutor is thinking...</span>
+              </div>
             )}
+          </div>
+
+          <div className="p-6 border-t border-border">
+            <div className="flex gap-2">
+              <Textarea
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    askQuestion();
+                  }
+                }}
+                placeholder="Ask a question about this step..."
+                className="min-h-[60px] resize-none"
+                disabled={isLoading}
+              />
+              <Button
+                onClick={askQuestion}
+                disabled={isLoading || !question.trim()}
+                size="icon"
+                className="h-[60px] w-[60px] shrink-0"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+              </Button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>
