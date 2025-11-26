@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -18,6 +18,26 @@ import "katex/dist/katex.min.css";
 import { MathGraph } from "./MathGraph";
 import { TheoryQuiz } from "./TheoryQuiz";
 import { supabase } from "@/integrations/supabase/client";
+import { SessionManager } from "@/lib/sessionManager";
+
+// Generate a chat session ID for theory conversations
+const getTheoryChatSessionId = (topic: string): string => {
+  const storageKey = `theoryChatSession_${topic}`;
+  let chatSessionId = sessionStorage.getItem(storageKey);
+
+  if (!chatSessionId) {
+    // Generate new UUID for this theory chat session
+    chatSessionId = 'tc-' + crypto.randomUUID?.() ||
+      'tc-' + 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    sessionStorage.setItem(storageKey, chatSessionId);
+  }
+
+  return chatSessionId;
+};
 
 interface Message {
   role: "user" | "assistant";
@@ -54,6 +74,18 @@ export const StepQuestionDialog = ({
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
   const [canShowQuiz, setCanShowQuiz] = useState(false);
   const { toast: toastHook } = useToast();
+
+  // Ref for auto-scrolling to bottom of messages
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages change or loading state changes
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading]);
 
   // Check if the last message context supports visual generation and quiz
   useEffect(() => {
@@ -193,75 +225,56 @@ export const StepQuestionDialog = ({
     setIsLoading(true);
 
     try {
+      // Get session IDs for tracking
+      const mainSessionId = SessionManager.getSession();
+      const theoryChatSessionId = getTheoryChatSessionId(topic);
+
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ask-step-question`,
+        'https://oopsautomation.app.n8n.cloud/webhook-test/theoryactual53423',
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           },
           body: JSON.stringify({
-            stepContent,
-            stepExplanation,
-            stepExample,
+            // Session tracking
+            sessionId: mainSessionId, // Main user session ID
+            chatSessionId: theoryChatSessionId, // Unique ID for this theory chat (persists across steps)
+            // Theory content - all in LaTeX format (use $...$ for inline math, $$...$$ for display math)
+            stepTitle: stepContent,
+            stepExplanation: stepExplanation, // Contains LaTeX math expressions
+            stepExample: stepExample, // Contains LaTeX math expressions
+            // User interaction
             userQuestion: userMessage.content,
-            topic,
-            gradeLevel,
-            conversationHistory: messages,
+            conversationHistory: messages.map(m => ({
+              role: m.role,
+              content: m.content
+            })),
+            // Context
+            topic: topic,
+            gradeLevel: gradeLevel,
+            // Metadata
+            timestamp: new Date().toISOString(),
+            contentFormat: "latex", // Indicates math expressions are in LaTeX format
           }),
         }
       );
 
-      if (!response.ok || !response.body) {
+      if (!response.ok) {
         throw new Error("Failed to get AI response");
       }
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = "";
-      let streamDone = false;
+      const responseText = await response.text();
       let aiResponse = "";
 
-      while (!streamDone) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") {
-            streamDone = true;
-            break;
-          }
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              aiResponse += content;
-              setMessages((prev) => {
-                const lastMessage = prev[prev.length - 1];
-                if (lastMessage?.role === "assistant") {
-                  return [...prev.slice(0, -1), { role: "assistant", content: aiResponse }];
-                }
-                return [...prev, { role: "assistant", content: aiResponse }];
-              });
-            }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
-          }
-        }
+      try {
+        const data = JSON.parse(responseText);
+        aiResponse = data.message || data.response || data.text || data.output || responseText;
+      } catch {
+        aiResponse = responseText;
       }
+
+      setMessages((prev) => [...prev, { role: "assistant", content: aiResponse }]);
     } catch (error) {
       console.error("Error asking question:", error);
       toastHook({
@@ -351,6 +364,8 @@ export const StepQuestionDialog = ({
                 <span className="text-sm">AI Tutor is thinking...</span>
               </div>
             )}
+            {/* Auto-scroll anchor */}
+            <div ref={messagesEndRef} />
           </div>
 
           <div className="p-6 border-t border-border space-y-3">
