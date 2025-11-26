@@ -364,6 +364,7 @@ const Exercise = () => {
                   steps={webhookSteps}
                   onStepsChange={setWebhookSteps}
                   onDismiss={() => setWebhookSteps(null)}
+                  problemQuestion={selectedProblem?.question}
                 />
               )}
 

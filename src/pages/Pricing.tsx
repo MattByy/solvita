@@ -137,8 +137,8 @@ export default function Pricing() {
             </Button>
           </div>
           <div className="flex items-center gap-3">
-            <img src="/logo/logocorepus (1).svg" alt="CorePus Logo" className="h-10 w-10" />
-            <img src="/name/solvesasdasd (1).svg" alt="CorePus" className="h-8" />
+            <img src="/logo/logocorepus (1).svg" alt="CorePus Logo" className="h-12 w-12" />
+            <img src="/name/solvesasdasd (1).svg" alt="CorePus" className="h-12" />
           </div>
         </div>
       </nav>
