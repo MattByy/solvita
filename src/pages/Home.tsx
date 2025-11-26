@@ -9,7 +9,7 @@ import { useLearningPlan } from "@/hooks/useLearningPlan";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  CheckCircle2, Circle, Calendar, BookOpen, Target, Loader2, Settings, AlertCircle,
+  CheckCircle2, Circle, Calendar, BookOpen, Target, Loader2, AlertCircle,
   User, Mail, GraduationCap, Copy, Check, RefreshCw, Clock, BarChart3, TrendingUp,
   TrendingDown, Lightbulb, XCircle, LogOut, ChevronDown, ChevronRight
 } from "lucide-react";
@@ -245,16 +245,11 @@ const Home = () => {
         <div className="flex flex-col gap-6">
           {/* Header */}
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">CorePus</h1>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setShowOnboarding(true)}
-                title="Settings"
-              >
-                <Settings className="h-5 w-5" />
-              </Button>
+              <img src="/logo/logocorepus (1).svg" alt="CorePus Logo" className="h-12 w-12" />
+              <img src="/name/solvesasdasd (1).svg" alt="CorePus" className="h-14" />
+            </div>
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -434,7 +429,7 @@ const Home = () => {
                     <p className="text-sm text-muted-foreground">Grade {plan.grade}</p>
                   </div>
                   <Button variant="outline" onClick={() => setShowOnboarding(true)}>
-                    <Settings className="h-4 w-4 mr-2" />
+                    <RefreshCw className="h-4 w-4 mr-2" />
                     Change Plan
                   </Button>
                 </div>

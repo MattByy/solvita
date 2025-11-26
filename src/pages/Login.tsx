@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, BookOpen, Users, GraduationCap } from 'lucide-react';
+import { Loader2, BookOpen, Users } from 'lucide-react';
 
 export default function Login() {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
@@ -22,14 +22,20 @@ export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Handle error messages from redirects
+  // Handle error messages and tab selection from redirects
   useEffect(() => {
     const errorParam = searchParams.get('error');
+    const tabParam = searchParams.get('tab');
+
     if (errorParam === 'no_account') {
       setError('No account found. Please register first before signing in with Google.');
       setActiveTab('register');
     } else if (errorParam === 'auth_failed') {
       setError('Authentication failed. Please try again.');
+    }
+
+    if (tabParam === 'register') {
+      setActiveTab('register');
     }
   }, [searchParams]);
 
@@ -185,11 +191,9 @@ export default function Login() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <GraduationCap className="w-12 h-12 text-purple-400" />
+            <img src="/logo/logocorepus (1).svg" alt="CorePus Logo" className="h-14 w-14" />
+            <img src="/name/solvesasdasd (1).svg" alt="CorePus" className="h-12" />
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-            Math Mastery AI
-          </h1>
           <p className="text-white/60 mt-2">Your personal AI math tutor</p>
         </div>
 

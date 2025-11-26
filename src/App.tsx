@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Auth Pages
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import AuthCallback from "./pages/AuthCallback";
 
@@ -33,10 +34,11 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Main Entry - Login/Register with Role Selection */}
-              <Route path="/" element={<Login />} />
+              {/* Main Entry - Landing Page */}
+              <Route path="/" element={<Landing />} />
 
-              {/* Auth Callback for OAuth */}
+              {/* Auth Pages */}
+              <Route path="/login" element={<Login />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
 
               {/* Student Routes (protected) */}
