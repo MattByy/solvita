@@ -11,7 +11,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   CheckCircle2, Circle, Calendar, BookOpen, Target, Loader2, AlertCircle,
   User, Mail, GraduationCap, Copy, Check, RefreshCw, Clock, BarChart3, TrendingUp,
-  TrendingDown, Lightbulb, XCircle, LogOut, ChevronDown, ChevronRight
+  TrendingDown, Lightbulb, XCircle, LogOut, ChevronDown, ChevronRight, CreditCard
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { format, differenceInDays, parseISO, isToday, isPast, differenceInHours } from "date-fns";
@@ -250,6 +250,14 @@ const Home = () => {
               <img src="/name/solvesasdasd (1).svg" alt="CorePus" className="h-14" />
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/pricing')}
+              >
+                <CreditCard className="h-4 w-4 mr-2" />
+                Plans
+              </Button>
               <Button
                 variant="outline"
                 size="sm"

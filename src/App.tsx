@@ -11,6 +11,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import AuthCallback from "./pages/AuthCallback";
+import Pricing from "./pages/Pricing";
 
 // Student Pages
 import StudentDashboard from "./pages/Home";
@@ -40,6 +41,7 @@ const App = () => (
               {/* Auth Pages */}
               <Route path="/login" element={<Login />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/pricing" element={<Pricing />} />
 
               {/* Student Routes (protected) */}
               <Route

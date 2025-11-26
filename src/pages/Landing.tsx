@@ -96,6 +96,13 @@ export default function Landing() {
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
+              onClick={() => navigate('/pricing')}
+              className="text-white/80 hover:text-white hover:bg-white/10 transition-all hover:scale-105 active:scale-95"
+            >
+              Pricing
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => navigate('/login')}
               className="text-white/80 hover:text-white hover:bg-white/10 transition-all hover:scale-105 active:scale-95"
             >
