@@ -4,37 +4,99 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import Home from "./pages/Home";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
+
+// Auth Pages
+import Login from "./pages/Login";
+import AuthCallback from "./pages/AuthCallback";
+
+// Student Pages
+import StudentDashboard from "./pages/Home";
 import StepByStep from "./pages/StepByStep";
 import Practice from "./pages/Practice";
 import Exercise from "./pages/Exercise";
 import VideoLibrary from "./pages/VideoLibrary";
-import Mistakes from "./pages/Mistakes";
-import LearningPlan from "./pages/LearningPlan";
 import NotFound from "./pages/NotFound";
+
+// Parent Pages
+import ParentDashboard from "./pages/ParentDashboard";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/learn" element={<StepByStep />} />
-            <Route path="/practice" element={<Practice />} />
-            <Route path="/exercice" element={<Exercise />} />
-            <Route path="/video-library" element={<VideoLibrary />} />
-            <Route path="/mistakes" element={<Mistakes />} />
-            <Route path="/learning-plan" element={<LearningPlan />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Main Entry - Login/Register with Role Selection */}
+              <Route path="/" element={<Login />} />
+
+              {/* Auth Callback for OAuth */}
+              <Route path="/auth/callback" element={<AuthCallback />} />
+
+              {/* Student Routes (protected) */}
+              <Route
+                path="/student/dashboard"
+                element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <StudentDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/learn"
+                element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <StepByStep />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/practice"
+                element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <Practice />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/exercice"
+                element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <Exercise />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/video-library"
+                element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <VideoLibrary />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Parent Routes (protected) */}
+              <Route
+                path="/parent/dashboard"
+                element={
+                  <ProtectedRoute allowedRoles={['parent']}>
+                    <ParentDashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Catch-all */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   </ErrorBoundary>
 );
