@@ -110,7 +110,7 @@ const Exercise = () => {
       formData.append('timestamp', new Date().toISOString());
       formData.append('problem', selectedProblem?.question || '');
 
-      const response = await fetch('https://oopsautomation.app.n8n.cloud/webhook-test/siunciammatke1', {
+      const response = await fetch('https://oopsautomation.app.n8n.cloud/webhook/siunciammatke1', {
         method: 'POST',
         body: formData,
       });
@@ -255,7 +255,7 @@ const Exercise = () => {
   // Problem Solving Screen
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
-      <div className={`flex transition-all duration-300 ${showAIChat ? 'mr-[400px]' : ''}`}>
+      <div className="flex">
         <div className="container mx-auto px-4 py-6 max-w-4xl flex-1">
           <div className="flex flex-col gap-6">
             <div className="flex gap-3">
@@ -408,13 +408,12 @@ const Exercise = () => {
       </div>
 
       {/* AI Chat Side Panel */}
-      {showAIChat && (
-        <ExerciseAIChatPanel
-          selectedProblem={selectedProblem}
-          topic={currentTask?.title || topicId}
-          onClose={() => setShowAIChat(false)}
-        />
-      )}
+      <ExerciseAIChatPanel
+        selectedProblem={selectedProblem}
+        topic={currentTask?.title || topicId}
+        onClose={() => setShowAIChat(false)}
+        isOpen={showAIChat}
+      />
     </div>
   );
 };

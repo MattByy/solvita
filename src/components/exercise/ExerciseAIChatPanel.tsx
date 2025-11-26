@@ -1,7 +1,14 @@
-import { useState } from "react";
-import { MessageCircle, Send, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { MessageCircle, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
@@ -13,20 +20,35 @@ interface ExerciseAIChatPanelProps {
   selectedProblem: Problem | null;
   topic: string;
   onClose: () => void;
+  isOpen: boolean;
 }
 
 export const ExerciseAIChatPanel = ({
   selectedProblem,
   topic,
   onClose,
+  isOpen,
 }: ExerciseAIChatPanelProps) => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [isSendingChat, setIsSendingChat] = useState(false);
 
-  const sendChatMessage = async (message: string) => {
-    if (!message.trim() || isSendingChat) return;
+  // Ref for auto-scrolling to bottom of messages
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Auto-scroll to bottom when messages change or loading state changes
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatMessages, isSendingChat]);
+
+  const sendChatMessage = async () => {
+    if (!chatInput.trim() || isSendingChat) return;
+
+    const message = chatInput;
     // Add user message immediately
     setChatMessages(prev => [...prev, { role: 'user', content: message }]);
     setChatInput("");
@@ -36,7 +58,7 @@ export const ExerciseAIChatPanel = ({
       // Get session ID
       const sessionId = SessionManager.getSession();
 
-      const response = await fetch('https://oopsautomation.app.n8n.cloud/webhook-test/chatassuAItheory1421', {
+      const response = await fetch('https://oopsautomation.app.n8n.cloud/webhook/chatassuAItheory1421', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,98 +118,107 @@ export const ExerciseAIChatPanel = ({
   };
 
   return (
-    <div className="fixed right-0 top-0 h-full w-[400px] bg-background border-l border-border shadow-xl flex flex-col z-50">
-      {/* Chat Header */}
-      <div className="p-4 border-b border-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <MessageCircle className="h-5 w-5 text-primary" />
-          <h3 className="font-semibold">AI Tutor</h3>
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent side="right" className="w-full sm:max-w-xl flex flex-col h-full p-0">
+        <div className="p-6 border-b border-border">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-primary" />
+              Ask About This Problem
+            </SheetTitle>
+            <SheetDescription>
+              Have a question about this problem? Ask the AI tutor for help!
+            </SheetDescription>
+          </SheetHeader>
         </div>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
 
-      {/* Problem Context */}
-      {selectedProblem && (
-        <div className="p-3 bg-accent/10 border-b border-border">
-          <p className="text-xs text-muted-foreground mb-1">Current Problem:</p>
-          <div className="prose prose-sm max-w-none dark:prose-invert text-sm">
-            <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-              {selectedProblem.question}
-            </ReactMarkdown>
-          </div>
-        </div>
-      )}
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          {/* Problem Context */}
+          {selectedProblem && (
+            <div className="p-4 bg-secondary/30 rounded-lg">
+              <p className="text-sm font-medium mb-2">Problem Context:</p>
+              <div className="prose prose-sm dark:prose-invert">
+                <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                  {selectedProblem.question}
+                </ReactMarkdown>
+              </div>
+              {selectedProblem.hint && (
+                <div className="mt-3 pt-3 border-t border-border">
+                  <p className="text-sm font-medium mb-1">Hint:</p>
+                  <div className="prose prose-sm dark:prose-invert">
+                    <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                      {selectedProblem.hint}
+                    </ReactMarkdown>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {chatMessages.length === 0 && (
-          <div className="text-center text-muted-foreground py-8">
-            <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p className="text-sm">Ask me anything about this problem!</p>
-            <p className="text-xs mt-2">I'll help guide you without giving away the answer.</p>
-          </div>
-        )}
-        {chatMessages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
+          {/* Chat Messages */}
+          {chatMessages.map((msg, idx) => (
             <div
-              className={`max-w-[80%] p-3 rounded-lg ${
+              key={idx}
+              className={`p-4 rounded-lg ${
                 msg.role === 'user'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-accent'
+                  ? 'bg-primary/10 ml-8'
+                  : 'bg-secondary/20 mr-8'
               }`}
             >
-              <div className="prose prose-sm max-w-none dark:prose-invert">
+              <p className="text-xs font-semibold mb-2 text-muted-foreground">
+                {msg.role === 'user' ? 'You' : 'AI Tutor'}
+              </p>
+              <div className="prose prose-sm dark:prose-invert max-w-none">
                 <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
                   {msg.content}
                 </ReactMarkdown>
               </div>
             </div>
-          </div>
-        ))}
-        {isSendingChat && (
-          <div className="flex justify-start">
-            <div className="bg-accent p-3 rounded-lg">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="h-2 w-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="h-2 w-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+          ))}
 
-      {/* Chat Input */}
-      <div className="p-4 border-t border-border">
-        <div className="flex gap-2">
-          <Input
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            placeholder="Ask a question..."
-            disabled={isSendingChat}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && chatInput.trim() && !isSendingChat) {
-                sendChatMessage(chatInput);
-              }
-            }}
-          />
-          <Button
-            onClick={() => sendChatMessage(chatInput)}
-            disabled={!chatInput.trim() || isSendingChat}
-          >
-            {isSendingChat ? (
-              <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-          </Button>
+          {/* Loading indicator */}
+          {isSendingChat && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-sm">AI Tutor is thinking...</span>
+            </div>
+          )}
+
+          {/* Auto-scroll anchor */}
+          <div ref={messagesEndRef} />
         </div>
-      </div>
-    </div>
+
+        {/* Chat Input */}
+        <div className="p-6 border-t border-border space-y-3">
+          <div className="flex gap-2">
+            <Textarea
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  sendChatMessage();
+                }
+              }}
+              placeholder="Ask a question about this problem..."
+              className="min-h-[60px] resize-none"
+              disabled={isSendingChat}
+            />
+            <Button
+              onClick={sendChatMessage}
+              disabled={isSendingChat || !chatInput.trim()}
+              size="icon"
+              className="h-[60px] w-[60px] shrink-0"
+            >
+              {isSendingChat ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )}
+            </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 };

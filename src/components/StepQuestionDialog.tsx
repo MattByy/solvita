@@ -230,7 +230,7 @@ export const StepQuestionDialog = ({
       const theoryChatSessionId = getTheoryChatSessionId(topic);
 
       const response = await fetch(
-        'https://oopsautomation.app.n8n.cloud/webhook-test/theoryactual53423',
+        'https://oopsautomation.app.n8n.cloud/webhook/theoryactual53423',
         {
           method: "POST",
           headers: {
