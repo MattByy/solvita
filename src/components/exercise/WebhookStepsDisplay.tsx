@@ -145,17 +145,17 @@ export const WebhookStepsDisplay = ({
     }
   };
 
-  // Helper functions for step status
-  const getStepStatus = (stepId: number): 'correct' | 'incorrect' | 'neutral' => {
-    if (!validationResult) return 'neutral';
-    if (validationResult.correctSteps.includes(stepId)) return 'correct';
-    if (validationResult.incorrectSteps.some(s => s.stepNumber === stepId)) return 'incorrect';
-    return 'neutral';
-  };
-
+  // Helper function - only mark as incorrect if it has an explanation
   const getIncorrectStepInfo = (stepId: number): IncorrectStep | undefined => {
     if (!validationResult) return undefined;
-    return validationResult.incorrectSteps.find(s => s.stepNumber === stepId);
+    const step = validationResult.incorrectSteps.find(s => s.stepNumber === stepId);
+    // Only return if it has an explanation
+    return step?.explanation ? step : undefined;
+  };
+
+  // Check if step has an error (only if it has explanation)
+  const hasError = (stepId: number): boolean => {
+    return !!getIncorrectStepInfo(stepId);
   };
 
   return (
@@ -169,40 +169,80 @@ export const WebhookStepsDisplay = ({
           Click any step to edit
         </span>
       </div>
-      <div className="space-y-4">
+      {/* Correct Solution - shows ABOVE user steps when incorrect */}
+      {validationResult && !validationResult.isCorrect && validationResult.correctSolution && validationResult.correctSolution.length > 0 && !isSubmitting && (
+        <Card className="p-4 bg-green-500/5 border-green-500/20 mb-4">
+          <p className="text-sm font-medium text-green-500 mb-3">Correct Solution</p>
+          <div className="space-y-1">
+            {validationResult.correctSolution.map((step) => (
+              <div key={step.stepNumber} className="flex items-center gap-2">
+                <span className="text-xs text-green-500/70 w-4">{step.stepNumber}.</span>
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: katex.renderToString(step.latex, {
+                      displayMode: false,
+                      throwOnError: false
+                    })
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Feedback - shows between correct solution and user steps */}
+      {validationResult && !validationResult.isCorrect && !isSubmitting && (
+        <div className="mb-4 p-3 bg-muted/50 rounded-lg">
+          <p className="text-sm text-muted-foreground">{validationResult.feedback}</p>
+        </div>
+      )}
+
+      {/* User's Steps label */}
+      {isSubmitted && !validationResult?.isCorrect && !isSubmitting && (
+        <p className="text-xs font-medium text-muted-foreground mb-2">Your steps:</p>
+      )}
+      <div className={isSubmitted && !validationResult?.isCorrect ? "space-y-2" : "space-y-4"}>
         {steps.map((step) => {
-          const status = getStepStatus(step.id);
           const incorrectInfo = getIncorrectStepInfo(step.id);
+          const stepHasError = hasError(step.id);
 
-          // Determine step badge color
-          const getBadgeColor = () => {
-            if (status === 'correct') return 'from-green-500 to-green-600';
-            if (status === 'incorrect') return 'from-red-500 to-red-600';
-            return 'from-blue-500 to-purple-500';
-          };
+          // Compact view after submission with errors
+          if (isSubmitted && !validationResult?.isCorrect) {
+            return (
+              <div
+                key={step.id}
+                className={`flex items-start gap-2 p-2 rounded ${stepHasError ? 'bg-red-500/5' : ''}`}
+              >
+                <span className={`text-xs w-4 ${stepHasError ? 'text-red-400' : 'text-muted-foreground'}`}>
+                  {step.id}.
+                </span>
+                <div className="flex-1">
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: katex.renderToString(step.latex, {
+                        displayMode: false,
+                        throwOnError: false
+                      })
+                    }}
+                  />
+                  {stepHasError && incorrectInfo && (
+                    <p className="text-sm font-medium text-red-500 mt-2">↳ {incorrectInfo.explanation}</p>
+                  )}
+                </div>
+              </div>
+            );
+          }
 
-          // Determine card border color
-          const getCardStyle = () => {
-            if (editingStepId === step.id) return 'bg-primary/10 border-primary/50';
-            if (status === 'correct') return 'bg-green-500/10 border-green-500/30';
-            if (status === 'incorrect') return 'bg-red-500/10 border-red-500/30';
-            return 'bg-background/50 hover:bg-accent/50';
-          };
-
+          // Full edit view before submission
           return (
             <Card
               key={step.id}
-              className={`p-4 ${getCardStyle()} transition-all`}
+              className={`p-4 ${editingStepId === step.id ? 'bg-primary/10 border-primary/50' : 'bg-background/50 hover:bg-accent/50'} transition-all`}
             >
               <div className="flex items-start gap-4">
-                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getBadgeColor()} flex items-center justify-center text-white font-bold flex-shrink-0`}>
-                  {status === 'correct' ? (
-                    <CheckCircle className="h-5 w-5" />
-                  ) : status === 'incorrect' ? (
-                    <XCircle className="h-5 w-5" />
-                  ) : (
-                    step.id
-                  )}
+                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center font-medium flex-shrink-0 text-sm">
+                  {step.id}
                 </div>
                 <div className="flex-1">
                   {editingStepId === step.id ? (
@@ -237,8 +277,8 @@ export const WebhookStepsDisplay = ({
                   ) : (
                     <div className="flex items-start gap-2">
                       <div
-                        onClick={() => !isSubmitted && handleStepClick(step)}
-                        className={`flex-1 p-2 rounded-lg transition-all ${!isSubmitted ? 'cursor-pointer hover:bg-accent/30' : ''}`}
+                        onClick={() => handleStepClick(step)}
+                        className="flex-1 p-2 rounded-lg transition-all cursor-pointer hover:bg-accent/30"
                       >
                         <div
                           className="text-xl"
@@ -249,51 +289,21 @@ export const WebhookStepsDisplay = ({
                             })
                           }}
                         />
-                        {!isSubmitted && (
-                          <p className="text-xs text-muted-foreground mt-2">
-                            Click to edit
-                          </p>
-                        )}
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Click to edit
+                        </p>
                       </div>
-                      {!isSubmitted && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 flex-shrink-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteStep(step.id);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Dropdown for incorrect step - shows explanation and correct answer */}
-                  {status === 'incorrect' && incorrectInfo && isSubmitted && (
-                    <div className="mt-4 pt-4 border-t border-red-500/30 space-y-3">
-                      {incorrectInfo.explanation && (
-                        <div className="bg-red-500/10 p-3 rounded-lg">
-                          <p className="text-xs font-semibold text-red-400 mb-1">What went wrong:</p>
-                          <p className="text-sm">{incorrectInfo.explanation}</p>
-                        </div>
-                      )}
-                      {incorrectInfo.correctAnswer && (
-                        <div className="bg-green-500/10 p-3 rounded-lg">
-                          <p className="text-xs font-semibold text-green-400 mb-2">Correct solution:</p>
-                          <div
-                            className="text-lg"
-                            dangerouslySetInnerHTML={{
-                              __html: katex.renderToString(incorrectInfo.correctAnswer, {
-                                displayMode: true,
-                                throwOnError: false
-                              })
-                            }}
-                          />
-                        </div>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 flex-shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteStep(step.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -312,48 +322,11 @@ export const WebhookStepsDisplay = ({
         </Card>
       )}
 
-      {/* Overall Feedback */}
-      {validationResult && !isSubmitting && (
-        <Card className={`p-4 mt-4 ${validationResult.isCorrect ? 'bg-green-500/10 border-green-500/30' : 'bg-orange-500/10 border-orange-500/30'}`}>
-          <div className="flex items-center gap-3">
-            {validationResult.isCorrect ? (
-              <CheckCircle className="h-5 w-5 text-green-500" />
-            ) : (
-              <XCircle className="h-5 w-5 text-orange-500" />
-            )}
-            <p className="text-sm font-medium">{validationResult.feedback}</p>
-          </div>
-        </Card>
-      )}
-
-      {/* Correct Solution - shows when there are incorrect steps */}
-      {validationResult && !validationResult.isCorrect && validationResult.correctSolution && validationResult.correctSolution.length > 0 && !isSubmitting && (
-        <Card className="p-6 bg-green-500/10 border-green-500/30 mt-4">
-          <div className="flex items-center gap-3 mb-4">
-            <CheckCircle className="h-5 w-5 text-green-500" />
-            <span className="text-lg font-bold text-green-400">Correct Solution</span>
-          </div>
-          <div className="space-y-3">
-            {validationResult.correctSolution.map((step) => (
-              <div key={step.stepNumber} className="flex items-start gap-4">
-                <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-400 font-bold flex-shrink-0">
-                  {step.stepNumber}
-                </div>
-                <div className="flex-1 p-3 bg-background/50 rounded-lg">
-                  <div
-                    className="text-lg"
-                    dangerouslySetInnerHTML={{
-                      __html: katex.renderToString(step.latex, {
-                        displayMode: true,
-                        throwOnError: false
-                      })
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
+      {/* Success message - only when all correct */}
+      {validationResult && validationResult.isCorrect && !isSubmitting && (
+        <div className="mt-4 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+          <p className="text-sm text-green-400">✓ {validationResult.feedback}</p>
+        </div>
       )}
 
       {/* Action Buttons */}
